@@ -2164,5 +2164,6 @@
     "platform": {
         "php": "^7.3"
     },
-    "platform-dev": []
+    "platform-dev": [],
+    "version": "1.1.0"
 }
