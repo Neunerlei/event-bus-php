@@ -157,11 +157,11 @@ $bus->addLazySubscriber(MyEventSubscriber::class);
 $bus->dispatch(new DummyEventA());
 ```
 
-## Altering the concrete dispatcher and listener provider
+## Altering the concrete dispatcher, listener provider and container
 As stated above we use the [Tukio library](https://github.com/Crell/Tukio) internally to provide the main logic of the bus.
 However the event bus class is designed to be agnostic to the PSR-14 implementation you want to use.
 
-You may override the internal listener provider and the dispatcher object by using the API:
+You may override the internal container, the listener provider and the dispatcher object by using the API:
 ```php
 use Neunerlei\EventBus\EventBus;
 $bus = new EventBus();
@@ -181,6 +181,14 @@ $listenerProvider = $bus->getConcreteListenerProvider();
 
 // Replace the listener provider with another implementation
 $bus->setConcreteListenerProvider($listenerProvider);
+
+// Retrieve the current container instance
+// This will be null, be cause there was no bus given to the constructor.
+$container = $bus->getContainer();
+
+// Replace the container with another implementation, or set one if the container
+// did not exist at the time when the event bus was instantiated.
+$bus->setContainer(new MyContainer());
 ```
 
 #### Listener provider adapter

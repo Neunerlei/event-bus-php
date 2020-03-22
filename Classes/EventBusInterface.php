@@ -22,6 +22,7 @@ namespace Neunerlei\EventBus;
 use Crell\Tukio\Dispatcher;
 use Neunerlei\EventBus\Subscription\EventSubscriberInterface;
 use Neunerlei\EventBus\Subscription\InvalidSubscriberException;
+use Psr\Container\ContainerInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\EventDispatcher\ListenerProviderInterface;
 
@@ -120,4 +121,20 @@ interface EventBusInterface extends EventDispatcherInterface {
 	 * @return \Neunerlei\EventBus\EventBusInterface
 	 */
 	public function setProviderAdapter(string $providerClassOrInterface, callable $adapter): EventBusInterface;
+	
+	/**
+	 * Can be used to set the container implementation inside the event bus
+	 *
+	 * @param \Psr\Container\ContainerInterface $container
+	 *
+	 * @return \Neunerlei\EventBus\EventBusInterface
+	 */
+	public function setContainer(ContainerInterface $container): EventBusInterface;
+	
+	/**
+	 * Returns the instance of the that is used inside the event bus or null
+	 *
+	 * @return \Psr\Container\ContainerInterface|null
+	 */
+	public function getContainer(): ?ContainerInterface;
 }

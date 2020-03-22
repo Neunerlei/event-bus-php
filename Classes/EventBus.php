@@ -241,4 +241,19 @@ class EventBus implements EventDispatcherInterface, ListenerProviderInterface, E
 		$this->providerAdapters[$providerClassOrInterface] = $adapter;
 		return $this;
 	}
+	
+	/**
+	 * @inheritDoc
+	 */
+	public function getContainer(): ?ContainerInterface {
+		return $this->container;
+	}
+	
+	/**
+	 * @inheritDoc
+	 */
+	public function setContainer(ContainerInterface $container): EventBusInterface {
+		$this->container = $container;
+		return $this;
+	}
 }
