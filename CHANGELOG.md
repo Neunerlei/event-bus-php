@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0](https://github.com/Neunerlei/event-bus-php/compare/v1.2.0...v2.0.0) (2020-05-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* removes crell/tukio as dispatcher and listener provider
+
+### Features
+
+* update to version 2.0 ([f8c8ef5](https://github.com/Neunerlei/event-bus-php/commit/f8c8ef51db269c2f9546069574a24356930175e8))
+
 ## [1.2.0](https://github.com/Neunerlei/event-bus-php/compare/v1.1.0...v1.2.0) (2020-03-22)
 
 
