@@ -20,22 +20,23 @@
 namespace Neunerlei\EventBus;
 
 
-use Crell\Tukio\Dispatcher;
-use Crell\Tukio\OrderedListenerProvider;
 use Crell\Tukio\OrderedProviderInterface;
+use InvalidArgumentException;
 use Neunerlei\ContainerAutoWiringDeclaration\SingletonInterface;
+use Neunerlei\EventBus\Dispatcher\EventBusDispatcher;
+use Neunerlei\EventBus\Dispatcher\EventBusListenerProvider;
+use Neunerlei\EventBus\Dispatcher\EventListenerListItem;
 use Neunerlei\EventBus\Subscription\EventSubscriberInterface;
 use Neunerlei\EventBus\Subscription\EventSubscription;
 use Neunerlei\EventBus\Subscription\InvalidSubscriberException;
 use Neunerlei\EventBus\Subscription\LazyEventSubscriberInterface;
 use Neunerlei\EventBus\Subscription\LazyEventSubscription;
-use Neunerlei\Options\Options;
 use Psr\Container\ContainerInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\EventDispatcher\ListenerProviderInterface;
-use Psr\Log\LoggerInterface;
 
 class EventBus implements EventDispatcherInterface, ListenerProviderInterface, EventBusInterface, SingletonInterface {
+	
 	/**
 	 * Holds the container instance or is null
 	 * @var \Psr\Container\ContainerInterface
@@ -76,37 +77,19 @@ class EventBus implements EventDispatcherInterface, ListenerProviderInterface, E
 		
 		// Register provider adapters
 		$this->providerAdapters = [
+			// Crell\Tukio listener provider
 			OrderedProviderInterface::class => function (OrderedProviderInterface $provider, string $event, callable $listener, array $options) {
-				// Validate options
-				$options = Options::make($options, [
-					"priority" => [
-						"type"    => "int",
-						"default" => 0,
-					],
-					"id"       => [
-						"type"    => ["string", "null"],
-						"default" => NULL,
-					],
-					"before"   => [
-						"type"    => ["string", "null"],
-						"default" => NULL,
-					],
-					"after"    => [
-						"type"    => ["string", "null"],
-						"default" => NULL,
-					],
-				]);
-				
-				// Register the listener
-				if (!empty($options["before"]))
-					return $provider->addListenerBefore($options["before"], $listener, $options["id"], $event);
-				else if (!empty($options["after"]))
-					return $provider->addListenerAfter($options["after"], $listener, $options["id"], $event);
-				return $provider->addListener($listener, $options["priority"], $options["id"], $event);
+				// Create a pseudo item to translate the options
+				$item = new EventListenerListItem("", [$this, "__construct"], $options);
+				if (is_null($item->pivotId))
+					return $provider->addListener($listener, $item->priority, $item->id, $event);
+				else if ($item->beforePivot)
+					return $provider->addListenerBefore($item->pivotId, $listener, $item->id, $event);
+				else
+					return $provider->addListenerAfter($item->pivotId, $listener, $item->id, $event);
 			},
 		];
 	}
-	
 	
 	/**
 	 * @inheritDoc
@@ -117,28 +100,33 @@ class EventBus implements EventDispatcherInterface, ListenerProviderInterface, E
 				$this->addListener($event, $listener, $options);
 		else {
 			
-			// Find the correct adapter we should use
-			$provider = $this->getConcreteListenerProvider();
-			$adapter = NULL;
-			if (!is_string($this->suggestedAdapter) || !$provider instanceof $this->suggestedAdapter) {
-				$this->suggestedAdapter = NULL;
-				foreach ($this->providerAdapters as $class => $_adapter) {
-					if (!$provider instanceof $class) continue;
-					$this->suggestedAdapter = $class;
-					break;
-				}
-				if (empty($this->suggestedAdapter))
-					throw new MissingAdapterException("Could not resolve a listener provider adapter class!");
-			}
-			$adapter = $this->providerAdapters[$this->suggestedAdapter];
-			
 			// Validate event
-			$events = Options::makeSingle("events", $events, [
-				"type" => "string",
-			]);
+			if (!is_string($events))
+				throw new InvalidArgumentException("The given event, or list of events is invalid! Only strings or arrays of strings are allowed!");
+			
+			// Check if we use the built-in provider, or an external provider that requires an adapter
+			$provider = $this->getConcreteListenerProvider();
+			if (!$provider instanceof EventBusListenerProvider) {
+				// Find the correct adapter, if we use an external package
+				$adapter = NULL;
+				if (!is_string($this->suggestedAdapter) || !$provider instanceof $this->suggestedAdapter) {
+					$this->suggestedAdapter = NULL;
+					foreach ($this->providerAdapters as $class => $_adapter) {
+						if (!$provider instanceof $class) continue;
+						$this->suggestedAdapter = $class;
+						break;
+					}
+					if (empty($this->suggestedAdapter))
+						throw new MissingAdapterException("Could not resolve a listener provider adapter class!");
+				}
+				$adapter = $this->providerAdapters[$this->suggestedAdapter];
+				$id = call_user_func($adapter, $provider, $events, $listener, $options);
+			} else {
+				// Use the built-in provider
+				$id = $provider->addListener($events, $listener, $options);
+			}
 			
 			// Call the real handler implementation
-			$id = call_user_func($adapter, $provider, $events, $listener, $options);
 			if (empty($options["id"])) $options["id"] = $id;
 		}
 		
@@ -212,9 +200,7 @@ class EventBus implements EventDispatcherInterface, ListenerProviderInterface, E
 	 */
 	public function getConcreteDispatcher(): EventDispatcherInterface {
 		if (empty($this->concreteDispatcher))
-			$this->concreteDispatcher = new Dispatcher($this->getConcreteListenerProvider(),
-				(!empty($this->container) && $this->container->has(LoggerInterface::class) ?
-					$this->container->get(LoggerInterface::class) : NULL));
+			$this->concreteDispatcher = new EventBusDispatcher($this->getConcreteListenerProvider());
 		return $this->concreteDispatcher;
 	}
 	
@@ -230,7 +216,7 @@ class EventBus implements EventDispatcherInterface, ListenerProviderInterface, E
 	 * @inheritDoc
 	 */
 	public function getConcreteListenerProvider(): ListenerProviderInterface {
-		if (empty($this->concreteProvider)) $this->concreteProvider = new OrderedListenerProvider();
+		if (empty($this->concreteProvider)) $this->concreteProvider = new EventBusListenerProvider();
 		return $this->concreteProvider;
 	}
 	

@@ -3,7 +3,11 @@ This package contains a [PSR-14](https://www.php-fig.org/psr/psr-14/) compliant 
 
 While I see where PSR is coming from, for the most part in my daily life it feels weired to have the registration of listeners and dispatching of events in two different classes. This is were this facade comes in; it combines both the dispatcher and provider into a single class you can use in your code. 
 
-In it's core the event bus wraps around the [Tukio library](https://github.com/Crell/Tukio) by [Larry Garfield](https://github.com/Crell). 
+## Version 2.0
+The second version does no longer rely on the [Tukio library](https://github.com/Crell/Tukio), instead provides
+it's own listener provider and dispatcher implementations.
+The dependency on my [Options library](https://github.com/Neunerlei/options-php) has also been removed in order to improve performance
+in event-heavy projects. 
 
 ## Installation
 Install this package using composer:
@@ -15,6 +19,7 @@ composer require neunerlei/event-bus
 ## Basic usage
 You can use the event bus like any other good'ol event bus implementation you have without psr 14.
 ```php
+<?php
 use Neunerlei\EventBus\EventBus;
 use Neunerlei\EventBus\Tests\Assets\DummyEventA;
 
@@ -33,6 +38,7 @@ Priorities can be set to any integer value, where 0 is the default. The value on
 on the "-" range defines a lower (later) priority instead.
 
 ```php
+<?php
 use Neunerlei\EventBus\EventBus;
 use Neunerlei\EventBus\Tests\Assets\DummyEventA;
 
@@ -54,10 +60,11 @@ $bus->dispatch(new DummyEventA());
 ```
 
 ## Using id based ordering
-The Tukio library provides the option for "id"-based ordering. Meaning you can provide Ids to your listeners and order other listeners before/after said id.
-The Event bus also provides a facade for that.
+The library provides "id"-based ordering, meaning you can provide Ids to your listeners and order other listeners before/after said id.
+The Event Bus also provides a facade for that.
 
 ```php
+<?php
 use Neunerlei\EventBus\EventBus;
 use Neunerlei\EventBus\Tests\Assets\DummyEventA;
 
@@ -84,6 +91,7 @@ This option is the way to go if you already have the instance of a subscriber.
 The subscriber class has to implement the ```EventSubscriberInterface``` interface to be valid.
 
 ```php
+<?php
 use Neunerlei\EventBus\EventBus;
 use Neunerlei\EventBus\Subscription\EventSubscriberInterface;
 use Neunerlei\EventBus\Subscription\EventSubscriptionInterface;
@@ -120,6 +128,7 @@ To create the instance lazily you can provide a factory function (the example be
 should return the instance of the subscriber. The other method of creating a service instance is to use a PSR-11 Container object that should be passed into the constructor of the event bus. If the event bus has a container implementation the factory definition is optional.
 
 ```php
+<?php
 use Neunerlei\EventBus\EventBus;
 use Neunerlei\EventBus\Subscription\EventSubscriptionInterface;
 use Neunerlei\EventBus\Subscription\LazyEventSubscriberInterface;
@@ -158,29 +167,26 @@ $bus->dispatch(new DummyEventA());
 ```
 
 ## Altering the concrete dispatcher, listener provider and container
-As stated above we use the [Tukio library](https://github.com/Crell/Tukio) internally to provide the main logic of the bus.
-However the event bus class is designed to be agnostic to the PSR-14 implementation you want to use.
+As stated above we use our own Dispatcher and ListenerProvider implementations internally to provide the main logic of the bus.
+However the event bus class is designed to be agnostic to the PSR-14 implementation you want to use. 
 
 You may override the internal container, the listener provider and the dispatcher object by using the API:
 ```php
+<?php
 use Neunerlei\EventBus\EventBus;
 $bus = new EventBus();
 
 // Retrieve the current dispatcher implementation
 $dispatcher = $bus->getConcreteDispatcher();
 
-// By default $dispatcher is now an instance of Crell\Tukio\Dispatcher
-
 // Replace the dispatcher with another implementation
-$bus->setConcreteDispatcher($dispatcher);
+$bus->setConcreteDispatcher(new \Crell\Tukio\Dispatcher(new \Crell\Tukio\OrderedListenerProvider()));
 
 // Retrieve the current implementation for the listener provider
 $listenerProvider = $bus->getConcreteListenerProvider();
 
-// By default $listenerProvider is now an instance of Crell\Tukio\OrderedListenerProvider
-
 // Replace the listener provider with another implementation
-$bus->setConcreteListenerProvider($listenerProvider);
+$bus->setConcreteListenerProvider(new \Crell\Tukio\OrderedListenerProvider());
 
 // Retrieve the current container instance
 // This will be null, be cause there was no bus given to the constructor.
@@ -188,15 +194,25 @@ $container = $bus->getContainer();
 
 // Replace the container with another implementation, or set one if the container
 // did not exist at the time when the event bus was instantiated.
-$bus->setContainer(new MyContainer());
+$bus->setContainer(new FancyContainer());
 ```
 
 #### Listener provider adapter
 One problem I encountered while writing the facade was, that PSR-14 does not define a unified contract for adding listeners (which is in fact one of it's strengths). 
 For that reason we have to provide an adapter that translates the registration to the correct listener provider implementation. 
-An adapter can be registered on a class or interface base and can be any callable. The example below shows a dummy implementation of the **already builtin adapter** to the Tukio provider implementation.
+An adapter can be registered on a class or interface base and can be any callable. The example below shows a dummy implementation of the **already builtin adapter** to the [Tukio library](https://github.com/Crell/Tukio) by [Larry Garfield](https://github.com/Crell).
+
+To use the library install it using composer: 
+```
+composer require crell/tukio ^1.1
+```
+
+After that you can register the provider adapter like so:
+**IMPORTANT: This is an example on how to implement your own adapter, you don't have to do this for the crell/tukio implementation!**
 ```php
-use Crell\Tukio\Dispatcher;use Crell\Tukio\OrderedListenerProvider;
+<?php
+use Crell\Tukio\Dispatcher;
+use Crell\Tukio\OrderedListenerProvider;
 use Crell\Tukio\OrderedProviderInterface;
 use Neunerlei\EventBus\EventBus;
 use Neunerlei\Options\Options;
@@ -220,7 +236,6 @@ $bus->setProviderAdapter(OrderedProviderInterface::class,
             return $provider->addListener($listener, $options["priority"], $options["id"], $event);
         });
 ```
-**IMPORTANT: This is an example on how to implement your own adapter, you don't have to do this for the default implementation!**
 
 The adapter receives four parameters.
 

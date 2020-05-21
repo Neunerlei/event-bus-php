@@ -22,6 +22,7 @@ namespace Neunerlei\EventBus\Tests\Assets;
 use Crell\Tukio\Dispatcher;
 use Crell\Tukio\OrderedListenerProvider;
 use Neunerlei\EventBus\AbstractStoppableEvent;
+use Neunerlei\EventBus\Dispatcher\EventListenerListItem;
 use Neunerlei\EventBus\Subscription\EventSubscriberInterface;
 use Neunerlei\EventBus\Subscription\EventSubscriptionInterface;
 use Neunerlei\EventBus\Subscription\LazyEventSubscriberInterface;
@@ -75,5 +76,14 @@ class DummySubscriberService implements EventSubscriberInterface {
 	
 	public function onTest(DummyEventA $eventC) {
 		$this->c++;
+	}
+}
+
+class DummyEventListenerListItemCountReset extends EventListenerListItem {
+	/**
+	 * Helper to reset the unique id counter to avoid tainting the different test scenarios
+	 */
+	public static function reset() {
+		EventListenerListItem::$counter = 0;
 	}
 }

@@ -14,31 +14,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * Last modified: 2020.03.01 at 18:54
+ * Last modified: 2020.05.21 at 20:46
  */
 
-namespace Neunerlei\EventBus\Tests;
+namespace Neunerlei\EventBus\Tests\Assets;
 
-use Neunerlei\EventBus\Dispatcher\EventBusDispatcher;
-use Neunerlei\EventBus\Dispatcher\EventBusListenerProvider;
+
+use Crell\Tukio\Dispatcher;
+use Crell\Tukio\OrderedListenerProvider;
 use Neunerlei\EventBus\EventBus;
 use Neunerlei\EventBus\EventBusInterface;
-use Neunerlei\EventBus\Tests\Assets\AbstractEventBusTest;
 
 /**
- * Class EventBusTest
+ * Class EventBusTukioTest
  *
- * Tests the default implementation of the listener provider and the dispatcher
+ * Tests the event handling implementation using crell\tukio
  *
- * @package Neunerlei\EventBus\Tests
+ * @package Neunerlei\EventBus\Tests\Assets
  */
-class EventBusTest extends AbstractEventBusTest {
+class EventBusTukioTest extends AbstractEventBusTest {
 	public function testDependencyInstantiation() {
 		$i = $this->getBus();
 		$this->assertInstanceOf(EventBusInterface::class, $i);
 		$this->assertInstanceOf(EventBus::class, $i);
 		
-		$this->assertInstanceOf(EventBusDispatcher::class, $i->getConcreteDispatcher());
-		$this->assertInstanceOf(EventBusListenerProvider::class, $i->getConcreteListenerProvider());
+		$this->assertInstanceOf(Dispatcher::class, $i->getConcreteDispatcher());
+		$this->assertInstanceOf(OrderedListenerProvider::class, $i->getConcreteListenerProvider());
+	}
+	
+	protected function getBus(bool $withContainer = FALSE): EventBusInterface {
+		$i = parent::getBus($withContainer);
+		$i->setConcreteListenerProvider(new OrderedListenerProvider());
+		$i->setConcreteDispatcher(new Dispatcher($i->getConcreteListenerProvider()));
+		return $i;
 	}
 }

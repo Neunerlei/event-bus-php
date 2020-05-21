@@ -50,9 +50,9 @@ interface EventBusInterface extends EventDispatcherInterface {
 	 *                                  only guaranteed to come after the specified existing listener. No guarantee is
 	 *                                  made regarding when it comes relative to any other listener.
 	 *
-	 *
 	 * @return $this
 	 * @throws MissingAdapterException
+	 * @throws \InvalidArgumentException
 	 */
 	public function addListener($events, callable $listener, array $options = []): EventBusInterface;
 	
