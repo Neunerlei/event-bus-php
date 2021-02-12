@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright 2020 Martin Neundorfer (Neunerlei)
+/*
+ * Copyright 2021 Martin Neundorfer (Neunerlei)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * Last modified: 2020.03.01 at 18:54
+ * Last modified: 2021.02.12 at 22:59
  */
 
 namespace Neunerlei\EventBus\Tests;
@@ -32,13 +32,15 @@ use Neunerlei\EventBus\Tests\Assets\AbstractEventBusTest;
  *
  * @package Neunerlei\EventBus\Tests
  */
-class EventBusTest extends AbstractEventBusTest {
-	public function testDependencyInstantiation() {
-		$i = $this->getBus();
-		$this->assertInstanceOf(EventBusInterface::class, $i);
-		$this->assertInstanceOf(EventBus::class, $i);
-		
-		$this->assertInstanceOf(EventBusDispatcher::class, $i->getConcreteDispatcher());
-		$this->assertInstanceOf(EventBusListenerProvider::class, $i->getConcreteListenerProvider());
-	}
+class EventBusTest extends AbstractEventBusTest
+{
+    public function testDependencyInstantiation()
+    {
+        $i = $this->getBus();
+        $this->assertInstanceOf(EventBusInterface::class, $i);
+        $this->assertInstanceOf(EventBus::class, $i);
+
+        $this->assertInstanceOf(EventBusDispatcher::class, $i->getConcreteDispatcher());
+        $this->assertInstanceOf(EventBusListenerProvider::class, $i->getConcreteListenerProvider());
+    }
 }

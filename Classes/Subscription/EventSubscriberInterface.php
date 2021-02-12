@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright 2020 Martin Neundorfer (Neunerlei)
+/*
+ * Copyright 2021 Martin Neundorfer (Neunerlei)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * Last modified: 2020.03.02 at 10:38
+ * Last modified: 2021.02.12 at 22:59
  */
 
 namespace Neunerlei\EventBus\Subscription;
 
 
-interface EventSubscriberInterface {
-	/**
-	 * Should add all subscribed events of this object to the given subscription using the subscribe() method.
-	 *
-	 * @param EventSubscriptionInterface $subscription
-	 *
-	 * @return void
-	 */
-	public function subscribeToEvents(EventSubscriptionInterface $subscription);
+interface EventSubscriberInterface
+{
+    /**
+     * Should add all subscribed events of this object to the given subscription using the subscribe() method.
+     *
+     * @param   EventSubscriptionInterface  $subscription
+     *
+     * @return void
+     */
+    public function subscribeToEvents(EventSubscriptionInterface $subscription);
 }

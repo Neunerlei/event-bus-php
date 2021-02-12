@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright 2020 Martin Neundorfer (Neunerlei)
+/*
+ * Copyright 2021 Martin Neundorfer (Neunerlei)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * Last modified: 2020.03.01 at 19:12
+ * Last modified: 2021.02.12 at 22:59
  */
 
 namespace Neunerlei\EventBus\Tests\Assets;
@@ -27,63 +27,77 @@ use Neunerlei\EventBus\Subscription\EventSubscriberInterface;
 use Neunerlei\EventBus\Subscription\EventSubscriptionInterface;
 use Neunerlei\EventBus\Subscription\LazyEventSubscriberInterface;
 
-class DummyEventA {
+class DummyEventA
+{
 }
 
-class DummyEventB {
+class DummyEventB
+{
 }
 
-class DummyEventC extends DummyEventA {
+class DummyEventC extends DummyEventA
+{
 }
 
-class DummyStoppableEvent extends AbstractStoppableEvent {
+class DummyStoppableEvent extends AbstractStoppableEvent
+{
 }
 
-class DummyDispatcher extends Dispatcher {
+class DummyDispatcher extends Dispatcher
+{
 }
 
-class DummyProvider extends OrderedListenerProvider {
+class DummyProvider extends OrderedListenerProvider
+{
 }
 
-class DummyLazySubscriberService implements LazyEventSubscriberInterface {
-	public static $c = 0;
-	public static $bus;
-	
-	/**
-	 * @inheritDoc
-	 */
-	public static function subscribeToEvents(EventSubscriptionInterface $subscription) {
-		$subscription->subscribe(DummyEventA::class, "onTest");
-		static::$bus = $subscription->getBus();
-	}
-	
-	public function onTest(DummyEventA $eventC) {
-		self::$c = 1;
-	}
+class DummyLazySubscriberService implements LazyEventSubscriberInterface
+{
+    public static $c = 0;
+    public static $bus;
+
+    /**
+     * @inheritDoc
+     */
+    public static function subscribeToEvents(EventSubscriptionInterface $subscription)
+    {
+        $subscription->subscribe(DummyEventA::class, "onTest");
+        static::$bus = $subscription->getBus();
+    }
+
+    public function onTest(DummyEventA $eventC)
+    {
+        self::$c = 1;
+    }
 }
 
-class DummySubscriberService implements EventSubscriberInterface {
-	public $c = 0;
-	public $bus;
-	
-	/**
-	 * @inheritDoc
-	 */
-	public function subscribeToEvents(EventSubscriptionInterface $subscription) {
-		$subscription->subscribe(DummyEventA::class, "onTest");
-		$this->bus = $subscription->getBus();
-	}
-	
-	public function onTest(DummyEventA $eventC) {
-		$this->c++;
-	}
+class DummySubscriberService implements EventSubscriberInterface
+{
+    public $c = 0;
+    public $bus;
+
+    /**
+     * @inheritDoc
+     */
+    public function subscribeToEvents(EventSubscriptionInterface $subscription)
+    {
+        $subscription->subscribe(DummyEventA::class, "onTest");
+        $this->bus = $subscription->getBus();
+    }
+
+    public function onTest(DummyEventA $eventC)
+    {
+        $this->c++;
+    }
 }
 
-class DummyEventListenerListItemCountReset extends EventListenerListItem {
-	/**
-	 * Helper to reset the unique id counter to avoid tainting the different test scenarios
-	 */
-	public static function reset() {
-		EventListenerListItem::$counter = 0;
-	}
+class DummyEventListenerListItemCountReset extends EventListenerListItem
+{
+    /**
+     * Helper to reset the unique id counter to avoid tainting the different test scenarios
+     */
+    public static function reset()
+    {
+        EventListenerListItem::$counter = 0;
+    }
 }

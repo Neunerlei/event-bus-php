@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright 2020 Martin Neundorfer (Neunerlei)
+/*
+ * Copyright 2021 Martin Neundorfer (Neunerlei)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * Last modified: 2020.03.02 at 11:01
+ * Last modified: 2021.02.12 at 22:59
  */
 
 namespace Neunerlei\EventBus\Subscription;
@@ -22,44 +22,49 @@ namespace Neunerlei\EventBus\Subscription;
 
 use Neunerlei\EventBus\EventBusInterface;
 
-class LazyEventSubscription implements EventSubscriptionInterface {
-	
-	/**
-	 * @var \Neunerlei\EventBus\EventBusInterface
-	 */
-	protected $bus;
-	
-	/**
-	 * @var callable
-	 */
-	protected $factory;
-	
-	/**
-	 * LazyEventSubscription constructor.
-	 *
-	 * @param \Neunerlei\EventBus\EventBusInterface $bus
-	 * @param callable                              $factory
-	 */
-	public function __construct(EventBusInterface $bus, callable $factory) {
-		$this->bus = $bus;
-		$this->factory = $factory;
-	}
-	
-	/**
-	 * @inheritDoc
-	 */
-	public function subscribe($events, string $method, array $options = []): EventSubscriptionInterface {
-		$this->getBus()->addListener($events, function () use ($method) {
-			return call_user_func_array([call_user_func($this->factory), $method], func_get_args());
-		}, $options);
-		return $this;
-	}
-	
-	/**
-	 * @inheritDoc
-	 */
-	public function getBus(): EventBusInterface {
-		return $this->bus;
-	}
-	
+class LazyEventSubscription implements EventSubscriptionInterface
+{
+
+    /**
+     * @var \Neunerlei\EventBus\EventBusInterface
+     */
+    protected $bus;
+
+    /**
+     * @var callable
+     */
+    protected $factory;
+
+    /**
+     * LazyEventSubscription constructor.
+     *
+     * @param   \Neunerlei\EventBus\EventBusInterface  $bus
+     * @param   callable                               $factory
+     */
+    public function __construct(EventBusInterface $bus, callable $factory)
+    {
+        $this->bus     = $bus;
+        $this->factory = $factory;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function subscribe($events, string $method, array $options = []): EventSubscriptionInterface
+    {
+        $this->getBus()->addListener($events, function () use ($method) {
+            return call_user_func_array([call_user_func($this->factory), $method], func_get_args());
+        }, $options);
+
+        return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getBus(): EventBusInterface
+    {
+        return $this->bus;
+    }
+
 }

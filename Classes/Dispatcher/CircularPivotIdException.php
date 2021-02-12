@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright 2020 Martin Neundorfer (Neunerlei)
+/*
+ * Copyright 2021 Martin Neundorfer (Neunerlei)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * Last modified: 2020.05.21 at 18:12
+ * Last modified: 2021.02.12 at 22:59
  */
 
 namespace Neunerlei\EventBus\Dispatcher;
@@ -22,6 +22,7 @@ namespace Neunerlei\EventBus\Dispatcher;
 
 use Neunerlei\EventBus\EventBusException;
 
-class CircularPivotIdException extends EventBusException {
-	
+class CircularPivotIdException extends EventBusException
+{
+
 }

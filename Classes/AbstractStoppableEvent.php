@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright 2020 Martin Neundorfer (Neunerlei)
+/*
+ * Copyright 2021 Martin Neundorfer (Neunerlei)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * Last modified: 2020.03.02 at 00:07
+ * Last modified: 2021.02.12 at 22:59
  */
 
 namespace Neunerlei\EventBus;
@@ -28,6 +28,7 @@ use Psr\EventDispatcher\StoppableEventInterface;
  *
  * @package Neunerlei\EventBus
  */
-abstract class AbstractStoppableEvent implements StoppableEventInterface {
-	use StoppableEventTrait;
+abstract class AbstractStoppableEvent implements StoppableEventInterface
+{
+    use StoppableEventTrait;
 }
