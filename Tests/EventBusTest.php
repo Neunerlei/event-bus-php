@@ -37,10 +37,10 @@ class EventBusTest extends AbstractEventBusTest
     public function testDependencyInstantiation()
     {
         $i = $this->getBus();
-        $this->assertInstanceOf(EventBusInterface::class, $i);
-        $this->assertInstanceOf(EventBus::class, $i);
+        self::assertInstanceOf(EventBusInterface::class, $i);
+        self::assertInstanceOf(EventBus::class, $i);
 
-        $this->assertInstanceOf(EventBusDispatcher::class, $i->getConcreteDispatcher());
-        $this->assertInstanceOf(EventBusListenerProvider::class, $i->getConcreteListenerProvider());
+        self::assertInstanceOf(EventBusDispatcher::class, $i->getConcreteDispatcher());
+        self::assertInstanceOf(EventBusListenerProvider::class, $i->getConcreteListenerProvider());
     }
 }

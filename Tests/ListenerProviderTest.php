@@ -67,15 +67,15 @@ class ListenerProviderTest extends TestCase
         $id       = $provider->addListener(DummyEventA::class, function () use (&$c) {
             $this->assertEquals(0, $c++);
         });
-        $this->assertEquals(md5(DummyEventA::class . "-" . 0), $id);
+        self::assertEquals(md5(DummyEventA::class . "-" . 0), $id);
         $id = $provider->addListener(DummyEventA::class, function () use (&$c) {
             $this->assertEquals(1, $c++);
         });
-        $this->assertEquals(md5(DummyEventA::class . "-" . 1), $id);
+        self::assertEquals(md5(DummyEventA::class . "-" . 1), $id);
         $id = $provider->addListener(DummyEventA::class, function () use (&$c) {
             $this->assertEquals(2, $c++);
         });
-        $this->assertEquals(md5(DummyEventA::class . "-" . 2), $id);
+        self::assertEquals(md5(DummyEventA::class . "-" . 2), $id);
 
         $provider->addListener(DummyEventB::class, function () use (&$c) {
             $this->assertEquals(4, $c++);
@@ -86,7 +86,7 @@ class ListenerProviderTest extends TestCase
         $id = $provider->addListener(DummyEventB::class, function () use (&$c) {
             $this->assertEquals(6, $c++);
         });
-        $this->assertEquals(md5(DummyEventB::class . "-" . 5), $id);
+        self::assertEquals(md5(DummyEventB::class . "-" . 5), $id);
 
         $provider->addListener(DummyEventA::class, function () use (&$c) {
             $this->assertEquals(3, $c++);
@@ -169,12 +169,12 @@ class ListenerProviderTest extends TestCase
         $id = $provider->addListener(DummyEventA::class, function () use (&$c) {
             $this->assertEquals(4, $c++);
         }, ["after" => "3", "id" => "4"]);
-        $this->assertEquals("4", $id);
+        self::assertEquals("4", $id);
 
         $id = $provider->addListener(DummyEventA::class, function () use (&$c) {
             $this->assertEquals(3, $c++);
         }, ["id" => "3"]);
-        $this->assertEquals("3", $id);
+        self::assertEquals("3", $id);
 
 
         $id = $provider->addListener(DummyEventB::class, function () use (&$c) {
@@ -316,7 +316,7 @@ class ListenerProviderTest extends TestCase
         }
 
         // We reached this point -> so everything is fine
-        $this->assertTrue(true);
+        self::assertTrue(true);
     }
 
     protected function getInstance(): EventBusListenerProvider

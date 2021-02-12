@@ -42,9 +42,9 @@ abstract class AbstractEventBusTest extends TestCase
     {
         $i = $this->getBus();
         $i->setConcreteDispatcher(new DummyDispatcher($i->getConcreteListenerProvider()));
-        $this->assertInstanceOf(DummyDispatcher::class, $i->getConcreteDispatcher());
+        self::assertInstanceOf(DummyDispatcher::class, $i->getConcreteDispatcher());
         $i->setConcreteListenerProvider(new DummyProvider());
-        $this->assertInstanceOf(DummyProvider::class, $i->getConcreteListenerProvider());
+        self::assertInstanceOf(DummyProvider::class, $i->getConcreteListenerProvider());
     }
 
     public function testListenerBinding()
@@ -57,11 +57,11 @@ abstract class AbstractEventBusTest extends TestCase
             $this->assertInstanceOf(DummyEventA::class, $eventA);
             $executed = true;
         });
-        $this->assertFalse($executed);
+        self::assertFalse($executed);
         $e  = new DummyEventA();
         $e2 = $i->dispatch($e);
-        $this->assertSame($e, $e2);
-        $this->assertTrue($executed);
+        self::assertSame($e, $e2);
+        self::assertTrue($executed);
 
         // Test multi binding
         $count = 0;
@@ -75,7 +75,7 @@ abstract class AbstractEventBusTest extends TestCase
         });
         $i->dispatch(new DummyEventA());
         $i->dispatch(new DummyEventB());
-        $this->assertEquals(2, $count);
+        self::assertEquals(2, $count);
     }
 
     public function testSubscriberBinding()
@@ -86,17 +86,17 @@ abstract class AbstractEventBusTest extends TestCase
         $service = new DummySubscriberService();
         $bus->addSubscriber($service);
         $bus->dispatch(new DummyEventC());
-        $this->assertEquals(1, $service->c);
-        $this->assertSame($bus, $service->bus);
+        self::assertEquals(1, $service->c);
+        self::assertSame($bus, $service->bus);
 
         // Test binding with a lazy service
         $bus->addLazySubscriber(DummyLazySubscriberService::class);
         $bus->dispatch(new DummyEventC());
-        $this->assertEquals(1, DummyLazySubscriberService::$c);
-        $this->assertSame($bus, DummyLazySubscriberService::$bus);
+        self::assertEquals(1, DummyLazySubscriberService::$c);
+        self::assertSame($bus, DummyLazySubscriberService::$bus);
 
         // Check if the instance was triggered again
-        $this->assertEquals(2, $service->c);
+        self::assertEquals(2, $service->c);
 
         // Test binding with lazy service with factory instead of container
         $bus = $this->getBus();
@@ -104,8 +104,8 @@ abstract class AbstractEventBusTest extends TestCase
             return new DummyLazySubscriberService();
         });
         $bus->dispatch(new DummyEventC());
-        $this->assertEquals(1, DummyLazySubscriberService::$c);
-        $this->assertSame($bus, DummyLazySubscriberService::$bus);
+        self::assertEquals(1, DummyLazySubscriberService::$c);
+        self::assertSame($bus, DummyLazySubscriberService::$bus);
     }
 
     public function testIfLazySubscriberWithoutFactoryOrContainerFails()
@@ -133,7 +133,7 @@ abstract class AbstractEventBusTest extends TestCase
 
         $bus->dispatch(new DummyEventA());
 
-        $this->assertEquals(3, $c);
+        self::assertEquals(3, $c);
     }
 
     public function testIdActions()
@@ -147,7 +147,7 @@ abstract class AbstractEventBusTest extends TestCase
         $bus->addListener(DummyEventA::class, function () use (&$c1) {
             $this->assertEquals(1, $c1++);
         }, ["id" => &$eventId]);
-        $this->assertIsString($eventId);
+        self::assertIsString($eventId);
 
         // Test if setting and id based ordering works (BEFORE)
         $bus->addListener(DummyEventA::class, function () use (&$c2) {
@@ -163,8 +163,8 @@ abstract class AbstractEventBusTest extends TestCase
         }, ["before" => $eventId]);
 
         $bus->dispatch(new DummyEventA());
-        $this->assertEquals(2, $c2);
-        $this->assertEquals(2, $c1);
+        self::assertEquals(2, $c2);
+        self::assertEquals(2, $c1);
 
         // Test if id bast ordering works (AFTER)
         $c1 = 0;
@@ -176,7 +176,7 @@ abstract class AbstractEventBusTest extends TestCase
             $this->assertEquals(0, $c1++);
         }, ["id" => "myId"]);
         $bus->dispatch(new DummyEventB());
-        $this->assertEquals(2, $c1);
+        self::assertEquals(2, $c1);
     }
 
     public function testStoppableEvents()
@@ -191,8 +191,8 @@ abstract class AbstractEventBusTest extends TestCase
             $this->fail("The event was not stopped!");
         });
         $e = $bus->dispatch(new DummyStoppableEvent());
-        $this->assertTrue($e->isPropagationStopped());
-        $this->assertEquals(1, $c);
+        self::assertTrue($e->isPropagationStopped());
+        self::assertEquals(1, $c);
     }
 
     protected function getBus(bool $withContainer = false): EventBusInterface

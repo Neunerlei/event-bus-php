@@ -37,11 +37,11 @@ class EventBusTukioTest extends AbstractEventBusTest
     public function testDependencyInstantiation()
     {
         $i = $this->getBus();
-        $this->assertInstanceOf(EventBusInterface::class, $i);
-        $this->assertInstanceOf(EventBus::class, $i);
+        self::assertInstanceOf(EventBusInterface::class, $i);
+        self::assertInstanceOf(EventBus::class, $i);
 
-        $this->assertInstanceOf(Dispatcher::class, $i->getConcreteDispatcher());
-        $this->assertInstanceOf(OrderedListenerProvider::class, $i->getConcreteListenerProvider());
+        self::assertInstanceOf(Dispatcher::class, $i->getConcreteDispatcher());
+        self::assertInstanceOf(OrderedListenerProvider::class, $i->getConcreteListenerProvider());
     }
 
     protected function getBus(bool $withContainer = false): EventBusInterface
