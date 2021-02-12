@@ -2,6 +2,8 @@
 .DS_Store
 .env
 vendor
+Tests/Coverage
+.phpunit.result.cache
 
 # IDEA Code Style
 .idea/*

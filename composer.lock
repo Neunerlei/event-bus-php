@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6a0aa13dfb27f4a87c078683f1f3955a",
+    "content-hash": "7d5e71fe12f3ddad8b7892601853d418",
     "packages": [
         {
             "name": "neunerlei/container-autowiring-declaration",
