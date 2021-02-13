@@ -26,6 +26,8 @@ use Neunerlei\EventBus\Dispatcher\EventListenerListItem;
 use Neunerlei\EventBus\Subscription\EventSubscriberInterface;
 use Neunerlei\EventBus\Subscription\EventSubscriptionInterface;
 use Neunerlei\EventBus\Subscription\LazyEventSubscriberInterface;
+use Psr\Container\ContainerInterface;
+use Psr\EventDispatcher\ListenerProviderInterface;
 
 class FixtureEventA
 {
@@ -49,6 +51,29 @@ class FixtureDispatcher extends Dispatcher
 
 class FixtureProvider extends OrderedListenerProvider
 {
+}
+
+class FixtureStandAloneProvider implements ListenerProviderInterface
+{
+    /**
+     * @var callable
+     */
+    protected $callback;
+
+    public function __construct(callable $callback)
+    {
+        $this->callback = $callback;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getListenersForEvent(object $event): iterable
+    {
+        call_user_func($this->callback, $event);
+
+        return [];
+    }
 }
 
 class FixtureLazySubscriberService implements LazyEventSubscriberInterface
@@ -99,5 +124,16 @@ class FixtureEventListenerListItemCountReset extends EventListenerListItem
     public static function reset()
     {
         EventListenerListItem::$counter = 0;
+    }
+}
+
+class FixtureContainer implements ContainerInterface
+{
+    public function get($id)
+    {
+    }
+
+    public function has($id)
+    {
     }
 }

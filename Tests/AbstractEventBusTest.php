@@ -23,6 +23,7 @@ namespace Neunerlei\EventBus\Tests\Assets;
 use Neunerlei\EventBus\EventBus;
 use Neunerlei\EventBus\EventBusInterface;
 use Neunerlei\EventBus\MissingContainerException;
+use Neunerlei\EventBus\Subscription\InvalidSubscriberException;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -38,7 +39,7 @@ abstract class AbstractEventBusTest extends TestCase
         FixtureEventListenerListItemCountReset::reset();
     }
 
-    public function testDependencyOverride()
+    public function testDependencyOverride(): void
     {
         $i = $this->getBus();
         $i->setConcreteDispatcher(new FixtureDispatcher($i->getConcreteListenerProvider()));
@@ -47,7 +48,7 @@ abstract class AbstractEventBusTest extends TestCase
         self::assertInstanceOf(FixtureProvider::class, $i->getConcreteListenerProvider());
     }
 
-    public function testListenerBinding()
+    public function testListenerBinding(): void
     {
         $i = $this->getBus();
 
@@ -78,7 +79,33 @@ abstract class AbstractEventBusTest extends TestCase
         self::assertEquals(2, $count);
     }
 
-    public function testSubscriberBinding()
+    public function _testEventNameValidationFailDataProvider(): array
+    {
+        return [
+            [null],
+            [[null]],
+            [false],
+        ];
+    }
+
+    /**
+     * @dataProvider _testEventNameValidationFailDataProvider
+     */
+    public function testEventNameValidationFail($val): void
+    {
+        $this->expectException(\TypeError::class);
+        $this->getBus()->addListener($val, static function () { });
+    }
+
+    public function testGetLastListenerId(): void
+    {
+        $i  = $this->getBus();
+        $id = null;
+        $i->addListener(FixtureEventA::class, function () { }, ['id' => &$id]);
+        self::assertEquals($id, $i->getLastListenerId());
+    }
+
+    public function testSubscriberBinding(): void
     {
         $bus = $this->getBus(true);
 
@@ -108,14 +135,21 @@ abstract class AbstractEventBusTest extends TestCase
         self::assertSame($bus, FixtureLazySubscriberService::$bus);
     }
 
-    public function testIfLazySubscriberWithoutFactoryOrContainerFails()
+    public function testIfLazySubscriberWithoutFactoryOrContainerFails(): void
     {
         $this->expectException(MissingContainerException::class);
         $bus = $this->getBus();
         $bus->addLazySubscriber(FixtureLazySubscriberService::class);
     }
 
-    public function testListenerPriority()
+    public function testIfLazySubscriberWithoutInterfaceFails(): void
+    {
+        $this->expectException(InvalidSubscriberException::class);
+        $bus = $this->getBus();
+        $bus->addLazySubscriber(FixtureEventA::class);
+    }
+
+    public function testListenerPriority(): void
     {
         $bus = $this->getBus();
         $c   = 0;
@@ -136,7 +170,7 @@ abstract class AbstractEventBusTest extends TestCase
         self::assertEquals(3, $c);
     }
 
-    public function testIdActions()
+    public function testIdActions(): void
     {
         $bus = $this->getBus();
 
@@ -179,7 +213,7 @@ abstract class AbstractEventBusTest extends TestCase
         self::assertEquals(2, $c1);
     }
 
-    public function testStoppableEvents()
+    public function testStoppableEvents(): void
     {
         $bus = $this->getBus();
         $c   = 0;
@@ -195,7 +229,7 @@ abstract class AbstractEventBusTest extends TestCase
         self::assertEquals(1, $c);
     }
 
-    public function testOneTimeEvents()
+    public function testOneTimeEvents(): void
     {
         $bus = $this->getBus();
         $a   = 0;

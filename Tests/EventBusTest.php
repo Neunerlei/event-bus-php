@@ -22,9 +22,16 @@ namespace Neunerlei\EventBus\Tests;
 
 use Neunerlei\EventBus\Dispatcher\EventBusDispatcher;
 use Neunerlei\EventBus\Dispatcher\EventBusListenerProvider;
+use Neunerlei\EventBus\Dispatcher\EventListenerListItem;
 use Neunerlei\EventBus\EventBus;
 use Neunerlei\EventBus\EventBusInterface;
+use Neunerlei\EventBus\MissingAdapterException;
 use Neunerlei\EventBus\Tests\Assets\AbstractEventBusTest;
+use Neunerlei\EventBus\Tests\Assets\FixtureContainer;
+use Neunerlei\EventBus\Tests\Assets\FixtureEventA;
+use Neunerlei\EventBus\Tests\Assets\FixtureStandAloneProvider;
+use Neunerlei\EventBus\Tests\Assets\FixtureStoppableEvent;
+use Psr\EventDispatcher\ListenerProviderInterface;
 
 /**
  * Class EventBusTest
@@ -43,5 +50,70 @@ class EventBusTest extends AbstractEventBusTest
 
         self::assertInstanceOf(EventBusDispatcher::class, $i->getConcreteDispatcher());
         self::assertInstanceOf(EventBusListenerProvider::class, $i->getConcreteListenerProvider());
+    }
+
+    public function testMissingAdapterFail()
+    {
+        $this->expectException(MissingAdapterException::class);
+        $i = $this->getBus();
+        $i->setConcreteListenerProvider(new class implements ListenerProviderInterface {
+            public function getListenersForEvent(object $event): iterable { }
+        });
+        $i->addListener('foo', static function () { });
+    }
+
+    public function testCustomProviderRegistration()
+    {
+        $i              = $this->getBus();
+        $calledProvider = false;
+        $provider       = new FixtureStandAloneProvider(function ($event) use (&$calledProvider) {
+            static::assertInstanceOf(FixtureEventA::class, $event);
+            $calledProvider = true;
+        });
+
+        $i->setConcreteListenerProvider($provider);
+        $calledAdapter = false;
+        $i->setProviderAdapter(FixtureStandAloneProvider::class, static function (
+            $provider,
+            $eventName,
+            $item,
+            $options
+        ) use (&$calledAdapter) {
+            static::assertInstanceOf(FixtureStandAloneProvider::class, $provider);
+            static::assertEquals(FixtureEventA::class, $eventName);
+            static::assertInstanceOf(EventListenerListItem::class, $item);
+            static::assertIsArray($options);
+            static::assertFalse($item->once);
+            static::assertInstanceOf(\Closure::class, $item->listener);
+            $calledAdapter = true;
+        });
+
+        $i->addListener(FixtureEventA::class, function () { });
+
+        static::assertEquals([], $i->getListenersForEvent(new FixtureEventA()));
+
+        static::assertTrue($calledProvider);
+        static::assertTrue($calledAdapter);
+    }
+
+    public function testGetSetContainer()
+    {
+        $i = $this->getBus();
+        static::assertNull($i->getContainer());
+        $c = new FixtureContainer();
+        $i->setContainer($c);
+        static::assertSame($c, $i->getContainer());
+    }
+
+    public function testIfStoppedEventsDontGetDispatched()
+    {
+        $this->expectNotToPerformAssertions();
+        $i = $this->getBus();
+        $e = new FixtureStoppableEvent();
+        $e->stopPropagation();
+        $i->addListener(FixtureStoppableEvent::class, static function () {
+            static::fail('An already stopped event has been dispatched!');
+        });
+        $i->dispatch($e);
     }
 }

@@ -34,7 +34,7 @@ use Neunerlei\EventBus\EventBusInterface;
  */
 class EventBusTukioTest extends AbstractEventBusTest
 {
-    public function testDependencyInstantiation()
+    public function testDependencyInstantiation(): void
     {
         $i = $this->getBus();
         self::assertInstanceOf(EventBusInterface::class, $i);
@@ -42,6 +42,36 @@ class EventBusTukioTest extends AbstractEventBusTest
 
         self::assertInstanceOf(Dispatcher::class, $i->getConcreteDispatcher());
         self::assertInstanceOf(OrderedListenerProvider::class, $i->getConcreteListenerProvider());
+    }
+
+    public function testOnceProxyReuse(): void
+    {
+        $i = $this->getBus();
+        // The proxy should be reused -> therefore the last listener id should be the same
+        $i->addListener('foo', static function () { }, ['once']);
+        $id = $i->getLastListenerId();
+        $i->addListener('foo', static function () { }, ['once']);
+        static::assertEquals($id, $i->getLastListenerId());
+
+        // The options differ to the previous proxy -> this should generate a new proxy id
+        $i->addListener('foo', static function () { }, ['once', 'priority' => 100]);
+        static::assertNotEquals($id, $i->getLastListenerId());
+
+        // A new event requires a new proxy
+        $i->addListener('bar', static function () { }, ['once']);
+        static::assertNotEquals($id, $i->getLastListenerId());
+    }
+
+    public function testOnceObjectSerialization(): void
+    {
+        $i = $this->getBus();
+        $i->addListener('foo', static function () { }, ['once', 'someOption' => function () { }]);
+        $id = $i->getLastListenerId();
+        static::assertIsString($id);
+        $i->addListener('foo', static function () { }, ['once', 'someOption' => $i]);
+        static::assertIsString($i->getLastListenerId());
+        static::assertNotEquals($id, $i->getLastListenerId());
+
     }
 
     protected function getBus(bool $withContainer = false): EventBusInterface
