@@ -1,4 +1,10 @@
 # Event Bus
+
+![Create new Release](https://github.com/Neunerlei/event-bus-php/workflows/Create%20new%20Release/badge.svg?event=push)
+[![codecov](https://codecov.io/gh/Neunerlei/event-bus-php/branch/master/graph/badge.svg)](https://codecov.io/gh/Neunerlei/event-bus-php)
+[![GitHub issues](https://img.shields.io/github/issues/Neunerlei/event-bus-php)](https://github.com/Neunerlei/event-bus-php/issues)
+[![GitHub license](https://img.shields.io/github/license/Neunerlei/event-bus-php)](https://github.com/Neunerlei/event-bus-php/blob/master/LICENSE.md)
+
 This package contains a [PSR-14](https://www.php-fig.org/psr/psr-14/) compliant event dispatcher facade, which aims to bring the listener provider and dispatcher objects closer together.
 
 While I see where PSR is coming from, for the most part in my daily life it feels weired to have the registration of listeners and dispatching of events in two different classes. This is were this facade comes in; it combines both the dispatcher and provider into a single class you can use in your code.
