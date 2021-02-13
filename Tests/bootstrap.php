@@ -104,7 +104,7 @@ class FixtureSubscriberService implements EventSubscriberInterface
     /**
      * @inheritDoc
      */
-    public function subscribeToEvents(EventSubscriptionInterface $subscription)
+    public function subscribeToEvents(EventSubscriptionInterface $subscription): void
     {
         $subscription->subscribe(FixtureEventA::class, "onTest");
         $this->bus = $subscription->getBus();
