@@ -30,8 +30,7 @@ interface LazyEventSubscriberInterface
      * @param   EventSubscriptionInterface  $subscription
      *
      * @return void
-     * @todo add return type in next major release
      */
-    public static function subscribeToEvents(EventSubscriptionInterface $subscription);
+    public static function subscribeToEvents(EventSubscriptionInterface $subscription): void;
 
 }
