@@ -53,10 +53,12 @@ class EventBusListenerProvider implements ListenerProviderInterface
 
     /**
      * EventBusListenerProvider constructor.
+     *
+     * @param   \Neunerlei\EventBus\Dispatcher\EventListenerList|null  $list
      */
-    public function __construct()
+    public function __construct(?EventListenerList $list = null)
     {
-        $this->listeners = new EventListenerList();
+        $this->listeners = $list ?? new EventListenerList();
     }
 
     /**
