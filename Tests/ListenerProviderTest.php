@@ -276,10 +276,6 @@ class ListenerProviderTest extends TestCase
             "before" => "1",
             "id"     => "2",
         ]);
-        // @todo why is this here?
-        foreach ($provider->getListenersForEvent(new FixtureEventA()) as $listener) {
-            ;
-        }
     }
 
     public function testBindingRemoval()
