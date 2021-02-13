@@ -41,10 +41,10 @@ namespace Neunerlei\EventBus\Tests;
 
 use Neunerlei\EventBus\Dispatcher\CircularPivotIdException;
 use Neunerlei\EventBus\Dispatcher\EventBusListenerProvider;
-use Neunerlei\EventBus\Tests\Assets\DummyEventA;
-use Neunerlei\EventBus\Tests\Assets\DummyEventB;
-use Neunerlei\EventBus\Tests\Assets\DummyEventC;
-use Neunerlei\EventBus\Tests\Assets\DummyEventListenerListItemCountReset;
+use Neunerlei\EventBus\Tests\Assets\FixtureEventA;
+use Neunerlei\EventBus\Tests\Assets\FixtureEventB;
+use Neunerlei\EventBus\Tests\Assets\FixtureEventC;
+use Neunerlei\EventBus\Tests\Assets\FixtureEventListenerListItemCountReset;
 use PHPUnit\Framework\TestCase;
 
 class ListenerProviderTest extends TestCase
@@ -54,7 +54,7 @@ class ListenerProviderTest extends TestCase
      */
     public static function setUpBeforeClass(): void
     {
-        DummyEventListenerListItemCountReset::reset();
+        FixtureEventListenerListItemCountReset::reset();
     }
 
     /**
@@ -64,42 +64,42 @@ class ListenerProviderTest extends TestCase
     {
         $provider = $this->getInstance();
         $c        = 0;
-        $id       = $provider->addListener(DummyEventA::class, function () use (&$c) {
+        $id       = $provider->addListener(FixtureEventA::class, function () use (&$c) {
             $this->assertEquals(0, $c++);
         });
-        self::assertEquals(md5(DummyEventA::class . "-" . 0), $id);
-        $id = $provider->addListener(DummyEventA::class, function () use (&$c) {
+        self::assertEquals(md5(FixtureEventA::class . "-" . 0), $id);
+        $id = $provider->addListener(FixtureEventA::class, function () use (&$c) {
             $this->assertEquals(1, $c++);
         });
-        self::assertEquals(md5(DummyEventA::class . "-" . 1), $id);
-        $id = $provider->addListener(DummyEventA::class, function () use (&$c) {
+        self::assertEquals(md5(FixtureEventA::class . "-" . 1), $id);
+        $id = $provider->addListener(FixtureEventA::class, function () use (&$c) {
             $this->assertEquals(2, $c++);
         });
-        self::assertEquals(md5(DummyEventA::class . "-" . 2), $id);
+        self::assertEquals(md5(FixtureEventA::class . "-" . 2), $id);
 
-        $provider->addListener(DummyEventB::class, function () use (&$c) {
+        $provider->addListener(FixtureEventB::class, function () use (&$c) {
             $this->assertEquals(4, $c++);
         });
-        $provider->addListener(DummyEventB::class, function () use (&$c) {
+        $provider->addListener(FixtureEventB::class, function () use (&$c) {
             $this->assertEquals(5, $c++);
         });
-        $id = $provider->addListener(DummyEventB::class, function () use (&$c) {
+        $id = $provider->addListener(FixtureEventB::class, function () use (&$c) {
             $this->assertEquals(6, $c++);
         });
-        self::assertEquals(md5(DummyEventB::class . "-" . 5), $id);
+        self::assertEquals(md5(FixtureEventB::class . "-" . 5), $id);
 
-        $provider->addListener(DummyEventA::class, function () use (&$c) {
+        $provider->addListener(FixtureEventA::class, function () use (&$c) {
             $this->assertEquals(3, $c++);
         });
 
-        $provider->addListener(DummyEventC::class, function () {
+        $provider->addListener(FixtureEventC::class, function () {
             $this->fail("This should not be executed!");
         });
 
-        foreach ($provider->getListenersForEvent(new DummyEventA()) as $listener) {
+        foreach ($provider->getListenersForEvent(new FixtureEventA()) as $listener) {
             call_user_func($listener);
         }
-        foreach ($provider->getListenersForEvent(new DummyEventB()) as $listener) {
+        foreach ($provider->getListenersForEvent(new FixtureEventB()) as $listener) {
             call_user_func($listener);
         }
     }
@@ -109,42 +109,42 @@ class ListenerProviderTest extends TestCase
         $provider = $this->getInstance();
         $c        = 0;
 
-        $provider->addListener(DummyEventA::class, function () use (&$c) {
+        $provider->addListener(FixtureEventA::class, function () use (&$c) {
             $this->assertEquals(0, $c++);
         });
-        $provider->addListener(DummyEventA::class, function () use (&$c) {
+        $provider->addListener(FixtureEventA::class, function () use (&$c) {
             $this->assertEquals(1, $c++);
         }, ["priority" => -400]);
-        $provider->addListener(DummyEventA::class, function () use (&$c) {
+        $provider->addListener(FixtureEventA::class, function () use (&$c) {
             $this->assertEquals(2, $c++);
         }, ["priority" => -500]);
-        $provider->addListener(DummyEventA::class, function () use (&$c) {
+        $provider->addListener(FixtureEventA::class, function () use (&$c) {
             $this->assertEquals(3, $c++);
         }, ["priority" => -500]);
 
 
-        $provider->addListener(DummyEventB::class, function () use (&$c) {
+        $provider->addListener(FixtureEventB::class, function () use (&$c) {
             $this->assertEquals(5, $c++);
         }, ["priority" => 500]);
-        $provider->addListener(DummyEventB::class, function () use (&$c) {
+        $provider->addListener(FixtureEventB::class, function () use (&$c) {
             $this->assertEquals(6, $c++);
         }, ["priority" => 200]);
-        $provider->addListener(DummyEventB::class, function () use (&$c) {
+        $provider->addListener(FixtureEventB::class, function () use (&$c) {
             $this->assertEquals(7, $c++);
         });
 
-        $provider->addListener(DummyEventA::class, function () use (&$c) {
+        $provider->addListener(FixtureEventA::class, function () use (&$c) {
             $this->assertEquals(4, $c++);
         }, ["priority" => -700]);
 
-        $provider->addListener(DummyEventC::class, function () {
+        $provider->addListener(FixtureEventC::class, function () {
             $this->fail("This should not be executed!");
         });
 
-        foreach ($provider->getListenersForEvent(new DummyEventA()) as $listener) {
+        foreach ($provider->getListenersForEvent(new FixtureEventA()) as $listener) {
             call_user_func($listener);
         }
-        foreach ($provider->getListenersForEvent(new DummyEventB()) as $listener) {
+        foreach ($provider->getListenersForEvent(new FixtureEventB()) as $listener) {
             call_user_func($listener);
         }
     }
@@ -154,50 +154,50 @@ class ListenerProviderTest extends TestCase
         $provider = $this->getInstance();
         $c        = 0;
 
-        $provider->addListener(DummyEventA::class, function () use (&$c) {
+        $provider->addListener(FixtureEventA::class, function () use (&$c) {
             $this->assertEquals(2, $c++);
         }, ["before" => "3", "id" => "2"]);
 
-        $provider->addListener(DummyEventA::class, function () use (&$c) {
+        $provider->addListener(FixtureEventA::class, function () use (&$c) {
             $this->assertEquals(1, $c++);
         }, ["before" => "2", "id" => "1"]);
 
-        $provider->addListener(DummyEventA::class, function () use (&$c) {
+        $provider->addListener(FixtureEventA::class, function () use (&$c) {
             $this->assertEquals(0, $c++);
         }, ["before" => "1", "id" => "0"]);
 
-        $id = $provider->addListener(DummyEventA::class, function () use (&$c) {
+        $id = $provider->addListener(FixtureEventA::class, function () use (&$c) {
             $this->assertEquals(4, $c++);
         }, ["after" => "3", "id" => "4"]);
         self::assertEquals("4", $id);
 
-        $id = $provider->addListener(DummyEventA::class, function () use (&$c) {
+        $id = $provider->addListener(FixtureEventA::class, function () use (&$c) {
             $this->assertEquals(3, $c++);
         }, ["id" => "3"]);
         self::assertEquals("3", $id);
 
 
-        $id = $provider->addListener(DummyEventB::class, function () use (&$c) {
+        $id = $provider->addListener(FixtureEventB::class, function () use (&$c) {
             $this->assertEquals(5, $c++);
         }, ["id" => "5"]);
 
-        $id = $provider->addListener(DummyEventB::class, function () use (&$c) {
+        $id = $provider->addListener(FixtureEventB::class, function () use (&$c) {
             $this->assertEquals(7, $c++);
         }, ["after" => $id, "id" => "7"]);
 
-        $provider->addListener(DummyEventB::class, function () use (&$c) {
+        $provider->addListener(FixtureEventB::class, function () use (&$c) {
             $this->assertEquals(6, $c++);
         }, ["before" => $id, "id" => "6"]);
 
 
-        $provider->addListener(DummyEventC::class, function () {
+        $provider->addListener(FixtureEventC::class, function () {
             $this->fail("This should not be executed!");
         });
 
-        foreach ($provider->getListenersForEvent(new DummyEventA()) as $listener) {
+        foreach ($provider->getListenersForEvent(new FixtureEventA()) as $listener) {
             call_user_func($listener);
         }
-        foreach ($provider->getListenersForEvent(new DummyEventB()) as $listener) {
+        foreach ($provider->getListenersForEvent(new FixtureEventB()) as $listener) {
             call_user_func($listener);
         }
     }
@@ -206,26 +206,26 @@ class ListenerProviderTest extends TestCase
     {
         $provider = $this->getInstance();
         $c        = 0;
-        $provider->addListener(DummyEventA::class, function () use (&$c) {
+        $provider->addListener(FixtureEventA::class, function () use (&$c) {
             $this->assertEquals(1, $c++);
         }, ["priority" => 100, "id" => "1"]);
-        $provider->addListener(DummyEventA::class, function () use (&$c) {
+        $provider->addListener(FixtureEventA::class, function () use (&$c) {
             $this->assertEquals(0, $c++);
         }, ["before" => "1", "id" => "0"]);
-        $provider->addListener(DummyEventA::class, function () use (&$c) {
+        $provider->addListener(FixtureEventA::class, function () use (&$c) {
             $this->assertEquals(2, $c++);
         }, ["priority" => 50, "id" => "2"]);
-        $provider->addListener(DummyEventA::class, function () use (&$c) {
+        $provider->addListener(FixtureEventA::class, function () use (&$c) {
             $this->assertEquals(3, $c++);
         }, ["before" => "4", "id" => "3"]);
-        $provider->addListener(DummyEventA::class, function () use (&$c) {
+        $provider->addListener(FixtureEventA::class, function () use (&$c) {
             $this->assertEquals(4, $c++);
         }, ["after" => 2, "id" => "4"]);
-        $provider->addListener(DummyEventA::class, function () use (&$c) {
+        $provider->addListener(FixtureEventA::class, function () use (&$c) {
             $this->assertEquals(5, $c++);
         }, ["id" => "5"]);
 
-        foreach ($provider->getListenersForEvent(new DummyEventA()) as $listener) {
+        foreach ($provider->getListenersForEvent(new FixtureEventA()) as $listener) {
             call_user_func($listener);
         }
     }
@@ -234,27 +234,27 @@ class ListenerProviderTest extends TestCase
     {
         $provider = $this->getInstance();
         $c        = 0;
-        $provider->addListener(DummyEventA::class, function () use (&$c) {
+        $provider->addListener(FixtureEventA::class, function () use (&$c) {
             $this->assertEquals(0, $c++);
         }, ["id" => "0"]);
-        $provider->addListener(DummyEventA::class, function () use (&$c) {
+        $provider->addListener(FixtureEventA::class, function () use (&$c) {
             $this->assertEquals(1, $c++);
         }, ["id" => "1"]);
-        $provider->addListener(DummyEventC::class, function () use (&$c) {
+        $provider->addListener(FixtureEventC::class, function () use (&$c) {
             $this->assertEquals(2, $c++);
         }, ["id" => "2"]);
-        $provider->addListener(DummyEventC::class, function () use (&$c) {
+        $provider->addListener(FixtureEventC::class, function () use (&$c) {
             $this->assertEquals(3, $c++);
         }, ["id" => "3"]);
-        $provider->addListener(DummyEventC::class, function () use (&$c) {
+        $provider->addListener(FixtureEventC::class, function () use (&$c) {
             $this->assertEquals(5, $c++);
         }, ["id" => "5", "after" => "4"]);
-        $provider->addListener(DummyEventA::class, function () use (&$c) {
+        $provider->addListener(FixtureEventA::class, function () use (&$c) {
             $this->assertEquals(4, $c++);
         }, ["priority" => -200, "id" => "4"]);
 
 
-        foreach ($provider->getListenersForEvent(new DummyEventC()) as $listener) {
+        foreach ($provider->getListenersForEvent(new FixtureEventC()) as $listener) {
             call_user_func($listener);
         }
     }
@@ -264,20 +264,20 @@ class ListenerProviderTest extends TestCase
         $this->expectException(CircularPivotIdException::class);
         $this->expectDeprecationMessage("You have an issue with your event's pivot id's! The pivot id's that failed are: 0, 1, 2");
         $provider = $this->getInstance();
-        $provider->addListener(DummyEventA::class, function () { }, [
+        $provider->addListener(FixtureEventA::class, function () { }, [
             "before" => "1",
             "id"     => "0",
         ]);
-        $provider->addListener(DummyEventA::class, function () { }, [
+        $provider->addListener(FixtureEventA::class, function () { }, [
             "before" => "2",
             "id"     => "1",
         ]);
-        $provider->addListener(DummyEventA::class, function () { }, [
+        $provider->addListener(FixtureEventA::class, function () { }, [
             "before" => "1",
             "id"     => "2",
         ]);
         // @todo why is this here?
-        foreach ($provider->getListenersForEvent(new DummyEventA()) as $listener) {
+        foreach ($provider->getListenersForEvent(new FixtureEventA()) as $listener) {
             ;
         }
     }
@@ -287,11 +287,11 @@ class ListenerProviderTest extends TestCase
         $provider = $this->getInstance();
 
         // Removal by id
-        $id = $provider->addListener(DummyEventA::class, function () {
+        $id = $provider->addListener(FixtureEventA::class, function () {
             $this->fail("The event was not removed as it should have been!");
         });
         $provider->removeListener($id);
-        $id = $provider->addListener(DummyEventB::class, function () {
+        $id = $provider->addListener(FixtureEventB::class, function () {
             $this->fail("The event was not removed as it should have been!");
         });
         $provider->removeListener($id);
@@ -300,8 +300,8 @@ class ListenerProviderTest extends TestCase
         $callback = function () {
             $this->fail("The event was not removed as it should have been!");
         };
-        $provider->addListener(DummyEventA::class, $callback);
-        $provider->addListener(DummyEventB::class, $callback);
+        $provider->addListener(FixtureEventA::class, $callback);
+        $provider->addListener(FixtureEventB::class, $callback);
         $provider->removeListener($callback);
 
         // Remove invalid values
@@ -309,10 +309,10 @@ class ListenerProviderTest extends TestCase
         $provider->removeListener(null);
         $provider->removeListener(function () { });
 
-        foreach ($provider->getListenersForEvent(new DummyEventA()) as $listener) {
+        foreach ($provider->getListenersForEvent(new FixtureEventA()) as $listener) {
             call_user_func($listener);
         }
-        foreach ($provider->getListenersForEvent(new DummyEventB()) as $listener) {
+        foreach ($provider->getListenersForEvent(new FixtureEventB()) as $listener) {
             call_user_func($listener);
         }
 

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /*
  * Copyright 2021 Martin Neundorfer (Neunerlei)
  *
@@ -20,6 +21,7 @@
 namespace Neunerlei\EventBus;
 
 
+use Closure;
 use Crell\Tukio\OrderedProviderInterface;
 use InvalidArgumentException;
 use Neunerlei\ContainerAutoWiringDeclaration\SingletonInterface;
@@ -31,9 +33,11 @@ use Neunerlei\EventBus\Subscription\EventSubscription;
 use Neunerlei\EventBus\Subscription\InvalidSubscriberException;
 use Neunerlei\EventBus\Subscription\LazyEventSubscriberInterface;
 use Neunerlei\EventBus\Subscription\LazyEventSubscription;
+use Neunerlei\EventBus\Util\ListenerProviderOnceProxy;
 use Psr\Container\ContainerInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\EventDispatcher\ListenerProviderInterface;
+use ReflectionFunction;
 
 class EventBus implements EventDispatcherInterface, ListenerProviderInterface, EventBusInterface, SingletonInterface
 {
@@ -67,6 +71,27 @@ class EventBus implements EventDispatcherInterface, ListenerProviderInterface, E
     protected $providerAdapters = [];
 
     /**
+     * A list of registered provider adapters that can handle the "once" option
+     *
+     * @var array
+     */
+    protected $providerAdaptersWithOnce = [];
+
+    /**
+     * The list of registered provider adapters that support once proxies out of the box
+     *
+     * @var array
+     */
+    protected $providerOnceProxies = [];
+
+    /**
+     * The unique id of the listener that was added last
+     *
+     * @var string|integer
+     */
+    protected $lastListenerId;
+
+    /**
      * Holds the class/interface name of the adapter we should use to bind to events
      *
      * @var string|null
@@ -85,27 +110,31 @@ class EventBus implements EventDispatcherInterface, ListenerProviderInterface, E
         // Register provider adapters
         $this->providerAdapters = [
             // Crell\Tukio listener provider
-            OrderedProviderInterface::class => function (
+            OrderedProviderInterface::class => static function (
                 OrderedProviderInterface $provider,
                 string $event,
-                callable $listener,
+                EventListenerListItem $item,
                 array $options
             ) {
-                // Create a pseudo item to translate the options
-                // @todo this should be done in the addListener method and then
-                // passed through to the adapter in the next major release
-                $item = new EventListenerListItem('', [$this, '__construct'], $options);
                 if ($item->pivotId === null) {
-                    return $provider->addListener($listener, $item->priority, $item->id, $event);
+                    return $provider->addListener($item->listener, $item->priority, $item->id, $event);
                 }
 
                 if ($item->beforePivot) {
-                    return $provider->addListenerBefore($item->pivotId, $listener, $item->id, $event);
+                    return $provider->addListenerBefore($item->pivotId, $item->listener, $item->id, $event);
                 }
 
-                return $provider->addListenerAfter($item->pivotId, $listener, $item->id, $event);
+                return $provider->addListenerAfter($item->pivotId, $item->listener, $item->id, $event);
             },
         ];
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getLastListenerId()
+    {
+        return $this->lastListenerId;
     }
 
     /**
@@ -128,7 +157,7 @@ class EventBus implements EventDispatcherInterface, ListenerProviderInterface, E
             $provider = $this->getConcreteListenerProvider();
             if ($provider instanceof EventBusListenerProvider) {
                 // Use the built-in provider
-                $id = $provider->addListener($events, $listener, $options);
+                $this->lastListenerId = $provider->addListener($events, $listener, $options);
             } else {
                 // Find the correct adapter, if we use an external package
                 $adapter = null;
@@ -149,13 +178,24 @@ class EventBus implements EventDispatcherInterface, ListenerProviderInterface, E
                 }
 
                 $adapter = $this->providerAdapters[$this->suggestedAdapter];
-                $id      = $adapter($provider, $events, $listener, $options);
+                $item    = new EventListenerListItem('', $listener, $options);
 
+                if ($item->once
+                    && (! isset($this->providerAdaptersWithOnce[$this->suggestedAdapter])
+                        || $this->providerAdaptersWithOnce[$this->suggestedAdapter] !== true)) {
+                    $item = $this->makeOnceProxy($provider, $events, $item, $options);
+
+                    // No item returned -> proxy is already registered in the listener, we are done
+                    if ($item === null) {
+                        return $this;
+                    }
+                }
+
+                $this->lastListenerId = $adapter($provider, $events, $item, $options);
             }
 
-            // Call the real handler implementation
             if (empty($options['id'])) {
-                $options['id'] = $id;
+                $options['id'] = $this->lastListenerId;
             }
         }
 
@@ -271,9 +311,13 @@ class EventBus implements EventDispatcherInterface, ListenerProviderInterface, E
     /**
      * @inheritDoc
      */
-    public function setProviderAdapter(string $providerClassOrInterface, callable $adapter): EventBusInterface
-    {
-        $this->providerAdapters[$providerClassOrInterface] = $adapter;
+    public function setProviderAdapter(
+        string $providerClassOrInterface,
+        callable $adapter,
+        bool $canHandleOnce = false
+    ): EventBusInterface {
+        $this->providerAdapters[$providerClassOrInterface]         = $adapter;
+        $this->providerAdaptersWithOnce[$providerClassOrInterface] = $canHandleOnce;
 
         return $this;
     }
@@ -294,5 +338,73 @@ class EventBus implements EventDispatcherInterface, ListenerProviderInterface, E
         $this->container = $container;
 
         return $this;
+    }
+
+    /**
+     * Creates a proxy listener that is registered in listener providers that don't support
+     * the "once" feature by themselves.
+     *
+     * It returns either an item clone with the proxy as listener or null if
+     * the proxy was already registered inside the listener provider
+     *
+     * @param   \Psr\EventDispatcher\ListenerProviderInterface        $provider
+     * @param   string                                                $eventName
+     * @param   \Neunerlei\EventBus\Dispatcher\EventListenerListItem  $item
+     * @param   array                                                 $options
+     *
+     * @return \Neunerlei\EventBus\Dispatcher\EventListenerListItem|null
+     */
+    protected function makeOnceProxy(
+        ListenerProviderInterface $provider,
+        string $eventName,
+        EventListenerListItem $item,
+        array $options
+    ): ?EventListenerListItem {
+        $optionsSerializer = static function ($v, callable $optionsSerializer) {
+            $r = [];
+            if (is_iterable($v)) {
+                foreach ($v as $k => $_v) {
+                    $r[$k] = $optionsSerializer($_v, $optionsSerializer);
+                }
+            } elseif (is_object($v)) {
+                if ($v instanceof Closure) {
+                    $ref = new ReflectionFunction($v);
+                    $r[] = $ref->getFileName();
+                    $r[] = $ref->getStartLine();
+                    $r[] = $ref->getEndLine();
+                } else {
+                    $r[] = spl_object_hash($v);
+                }
+            } else {
+                $r[] = serialize($v);
+            }
+
+            return md5(implode('.', $r));
+        };
+
+        $proxyId = 'once' . md5(implode('.', [
+                spl_object_id($provider),
+                $eventName,
+                $optionsSerializer($options, $optionsSerializer),
+            ]));
+
+        if (! isset($this->providerOnceProxies[$proxyId])) {
+            $isNew                               = true;
+            $this->providerOnceProxies[$proxyId] = new ListenerProviderOnceProxy();
+        }
+
+        $this->providerOnceProxies[$proxyId]->addItem($item);
+
+        if (isset($isNew)) {
+            $itemClone           = clone $item;
+            $itemClone->id       = $proxyId;
+            $itemClone->listener = [$this->providerOnceProxies[$proxyId], 'call'];
+
+            return $itemClone;
+        }
+
+        $this->lastListenerId = $this->providerOnceProxies[$proxyId]->id;
+
+        return null;
     }
 }

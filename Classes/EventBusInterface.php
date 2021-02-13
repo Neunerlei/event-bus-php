@@ -29,6 +29,12 @@ use Psr\EventDispatcher\ListenerProviderInterface;
 
 interface EventBusInterface extends EventDispatcherInterface
 {
+    /**
+     * Returns the unique id, of the last added event listener
+     *
+     * @return string|int|null
+     */
+    public function getLastListenerId();
 
     /**
      * Binds a handler to a single, or multiple events
@@ -123,10 +129,16 @@ interface EventBusInterface extends EventDispatcherInterface
      *
      * @param   string    $providerClassOrInterface  The class or interface name to register the adapter for
      * @param   callable  $adapter                   The adapter to register for the given class or interface
+     * @param   bool      $canHandleOnce             If set to true the registered adapter can handle the "once" option,
+     *                                               meaning it or the provider can handle one time listeners
      *
      * @return \Neunerlei\EventBus\EventBusInterface
      */
-    public function setProviderAdapter(string $providerClassOrInterface, callable $adapter): EventBusInterface;
+    public function setProviderAdapter(
+        string $providerClassOrInterface,
+        callable $adapter,
+        bool $canHandleOnce = false
+    ): EventBusInterface;
 
     /**
      * Can be used to set the container implementation inside the event bus

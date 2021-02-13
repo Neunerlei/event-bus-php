@@ -27,31 +27,31 @@ use Neunerlei\EventBus\Subscription\EventSubscriberInterface;
 use Neunerlei\EventBus\Subscription\EventSubscriptionInterface;
 use Neunerlei\EventBus\Subscription\LazyEventSubscriberInterface;
 
-class DummyEventA
+class FixtureEventA
 {
 }
 
-class DummyEventB
+class FixtureEventB
 {
 }
 
-class DummyEventC extends DummyEventA
+class FixtureEventC extends FixtureEventA
 {
 }
 
-class DummyStoppableEvent extends AbstractStoppableEvent
+class FixtureStoppableEvent extends AbstractStoppableEvent
 {
 }
 
-class DummyDispatcher extends Dispatcher
+class FixtureDispatcher extends Dispatcher
 {
 }
 
-class DummyProvider extends OrderedListenerProvider
+class FixtureProvider extends OrderedListenerProvider
 {
 }
 
-class DummyLazySubscriberService implements LazyEventSubscriberInterface
+class FixtureLazySubscriberService implements LazyEventSubscriberInterface
 {
     public static $c = 0;
     public static $bus;
@@ -61,17 +61,17 @@ class DummyLazySubscriberService implements LazyEventSubscriberInterface
      */
     public static function subscribeToEvents(EventSubscriptionInterface $subscription)
     {
-        $subscription->subscribe(DummyEventA::class, "onTest");
+        $subscription->subscribe(FixtureEventA::class, "onTest");
         static::$bus = $subscription->getBus();
     }
 
-    public function onTest(DummyEventA $eventC)
+    public function onTest(FixtureEventA $eventC)
     {
         self::$c = 1;
     }
 }
 
-class DummySubscriberService implements EventSubscriberInterface
+class FixtureSubscriberService implements EventSubscriberInterface
 {
     public $c = 0;
     public $bus;
@@ -81,17 +81,17 @@ class DummySubscriberService implements EventSubscriberInterface
      */
     public function subscribeToEvents(EventSubscriptionInterface $subscription)
     {
-        $subscription->subscribe(DummyEventA::class, "onTest");
+        $subscription->subscribe(FixtureEventA::class, "onTest");
         $this->bus = $subscription->getBus();
     }
 
-    public function onTest(DummyEventA $eventC)
+    public function onTest(FixtureEventA $eventC)
     {
         $this->c++;
     }
 }
 
-class DummyEventListenerListItemCountReset extends EventListenerListItem
+class FixtureEventListenerListItemCountReset extends EventListenerListItem
 {
     /**
      * Helper to reset the unique id counter to avoid tainting the different test scenarios

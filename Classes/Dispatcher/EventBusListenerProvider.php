@@ -87,6 +87,20 @@ class EventBusListenerProvider implements ListenerProviderInterface
     public function addListener(string $eventClassName, callable $listener, array $options = []): string
     {
         $item = new EventListenerListItem($eventClassName, $listener, $options);
+
+        // Register a wrapper for "once" events, so they can remove themself when executed
+        // I do this here, because this way one call call getListenersForEvent() an unlimited amount of times,
+        // but only if the listener is executed it then gets removed
+        if ($item->once) {
+            $concreteListener = $item->listener;
+            $id               = $item->id;
+            $item->listener   = function () use ($id, $concreteListener) {
+                $this->removeListener($id);
+
+                return $concreteListener(...func_get_args());
+            };
+        }
+
         $this->listeners->add($item);
 
         return $item->id;

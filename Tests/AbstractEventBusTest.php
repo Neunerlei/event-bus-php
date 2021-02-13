@@ -35,16 +35,16 @@ abstract class AbstractEventBusTest extends TestCase
      */
     public static function setUpBeforeClass(): void
     {
-        DummyEventListenerListItemCountReset::reset();
+        FixtureEventListenerListItemCountReset::reset();
     }
 
     public function testDependencyOverride()
     {
         $i = $this->getBus();
-        $i->setConcreteDispatcher(new DummyDispatcher($i->getConcreteListenerProvider()));
-        self::assertInstanceOf(DummyDispatcher::class, $i->getConcreteDispatcher());
-        $i->setConcreteListenerProvider(new DummyProvider());
-        self::assertInstanceOf(DummyProvider::class, $i->getConcreteListenerProvider());
+        $i->setConcreteDispatcher(new FixtureDispatcher($i->getConcreteListenerProvider()));
+        self::assertInstanceOf(FixtureDispatcher::class, $i->getConcreteDispatcher());
+        $i->setConcreteListenerProvider(new FixtureProvider());
+        self::assertInstanceOf(FixtureProvider::class, $i->getConcreteListenerProvider());
     }
 
     public function testListenerBinding()
@@ -53,28 +53,28 @@ abstract class AbstractEventBusTest extends TestCase
 
         // Test single binding
         $executed = false;
-        $i->addListener(DummyEventA::class, function (DummyEventA $eventA) use (&$executed) {
-            $this->assertInstanceOf(DummyEventA::class, $eventA);
+        $i->addListener(FixtureEventA::class, function (FixtureEventA $eventA) use (&$executed) {
+            $this->assertInstanceOf(FixtureEventA::class, $eventA);
             $executed = true;
         });
         self::assertFalse($executed);
-        $e  = new DummyEventA();
+        $e  = new FixtureEventA();
         $e2 = $i->dispatch($e);
         self::assertSame($e, $e2);
         self::assertTrue($executed);
 
         // Test multi binding
         $count = 0;
-        $i->addListener([DummyEventA::class, DummyEventB::class], function ($event) use (&$count) {
+        $i->addListener([FixtureEventA::class, FixtureEventB::class], function ($event) use (&$count) {
             if ($count === 0) {
-                $this->assertInstanceOf(DummyEventA::class, $event);
+                $this->assertInstanceOf(FixtureEventA::class, $event);
             } else {
-                $this->assertInstanceOf(DummyEventB::class, $event);
+                $this->assertInstanceOf(FixtureEventB::class, $event);
             }
             $count++;
         });
-        $i->dispatch(new DummyEventA());
-        $i->dispatch(new DummyEventB());
+        $i->dispatch(new FixtureEventA());
+        $i->dispatch(new FixtureEventB());
         self::assertEquals(2, $count);
     }
 
@@ -83,55 +83,55 @@ abstract class AbstractEventBusTest extends TestCase
         $bus = $this->getBus(true);
 
         // Test binding with an instance
-        $service = new DummySubscriberService();
+        $service = new FixtureSubscriberService();
         $bus->addSubscriber($service);
-        $bus->dispatch(new DummyEventC());
+        $bus->dispatch(new FixtureEventC());
         self::assertEquals(1, $service->c);
         self::assertSame($bus, $service->bus);
 
         // Test binding with a lazy service
-        $bus->addLazySubscriber(DummyLazySubscriberService::class);
-        $bus->dispatch(new DummyEventC());
-        self::assertEquals(1, DummyLazySubscriberService::$c);
-        self::assertSame($bus, DummyLazySubscriberService::$bus);
+        $bus->addLazySubscriber(FixtureLazySubscriberService::class);
+        $bus->dispatch(new FixtureEventC());
+        self::assertEquals(1, FixtureLazySubscriberService::$c);
+        self::assertSame($bus, FixtureLazySubscriberService::$bus);
 
         // Check if the instance was triggered again
         self::assertEquals(2, $service->c);
 
         // Test binding with lazy service with factory instead of container
         $bus = $this->getBus();
-        $bus->addLazySubscriber(DummyLazySubscriberService::class, function () {
-            return new DummyLazySubscriberService();
+        $bus->addLazySubscriber(FixtureLazySubscriberService::class, function () {
+            return new FixtureLazySubscriberService();
         });
-        $bus->dispatch(new DummyEventC());
-        self::assertEquals(1, DummyLazySubscriberService::$c);
-        self::assertSame($bus, DummyLazySubscriberService::$bus);
+        $bus->dispatch(new FixtureEventC());
+        self::assertEquals(1, FixtureLazySubscriberService::$c);
+        self::assertSame($bus, FixtureLazySubscriberService::$bus);
     }
 
     public function testIfLazySubscriberWithoutFactoryOrContainerFails()
     {
         $this->expectException(MissingContainerException::class);
         $bus = $this->getBus();
-        $bus->addLazySubscriber(DummyLazySubscriberService::class);
+        $bus->addLazySubscriber(FixtureLazySubscriberService::class);
     }
 
     public function testListenerPriority()
     {
         $bus = $this->getBus();
         $c   = 0;
-        $bus->addListener(DummyEventA::class, function () use (&$c) {
+        $bus->addListener(FixtureEventA::class, function () use (&$c) {
             $this->assertEquals(2, $c++);
         }, ["priority" => -10]);
 
-        $bus->addListener(DummyEventA::class, function () use (&$c) {
+        $bus->addListener(FixtureEventA::class, function () use (&$c) {
             $this->assertEquals(1, $c++);
         });
 
-        $bus->addListener(DummyEventA::class, function () use (&$c) {
+        $bus->addListener(FixtureEventA::class, function () use (&$c) {
             $this->assertEquals(0, $c++);
         }, ["priority" => 10]);
 
-        $bus->dispatch(new DummyEventA());
+        $bus->dispatch(new FixtureEventA());
 
         self::assertEquals(3, $c);
     }
@@ -144,38 +144,38 @@ abstract class AbstractEventBusTest extends TestCase
         $eventId = null;
         $c1      = 0;
         $c2      = 0;
-        $bus->addListener(DummyEventA::class, function () use (&$c1) {
+        $bus->addListener(FixtureEventA::class, function () use (&$c1) {
             $this->assertEquals(1, $c1++);
         }, ["id" => &$eventId]);
         self::assertIsString($eventId);
 
         // Test if setting and id based ordering works (BEFORE)
-        $bus->addListener(DummyEventA::class, function () use (&$c2) {
+        $bus->addListener(FixtureEventA::class, function () use (&$c2) {
             $this->assertEquals(1, $c2++);
         }, ["id" => "myId"]);
 
-        $bus->addListener(DummyEventA::class, function () use (&$c2) {
+        $bus->addListener(FixtureEventA::class, function () use (&$c2) {
             $this->assertEquals(0, $c2++);
         }, ["before" => "myId"]);
 
-        $bus->addListener(DummyEventA::class, function () use (&$c1) {
+        $bus->addListener(FixtureEventA::class, function () use (&$c1) {
             $this->assertEquals(0, $c1++);
         }, ["before" => $eventId]);
 
-        $bus->dispatch(new DummyEventA());
+        $bus->dispatch(new FixtureEventA());
         self::assertEquals(2, $c2);
         self::assertEquals(2, $c1);
 
         // Test if id bast ordering works (AFTER)
         $c1 = 0;
-        $bus->addListener(DummyEventB::class, function () use (&$c1) {
+        $bus->addListener(FixtureEventB::class, function () use (&$c1) {
             $this->assertEquals(1, $c1++);
         }, ["after" => "myId"]);
 
-        $bus->addListener(DummyEventB::class, function () use (&$c1) {
+        $bus->addListener(FixtureEventB::class, function () use (&$c1) {
             $this->assertEquals(0, $c1++);
         }, ["id" => "myId"]);
-        $bus->dispatch(new DummyEventB());
+        $bus->dispatch(new FixtureEventB());
         self::assertEquals(2, $c1);
     }
 
@@ -183,16 +183,48 @@ abstract class AbstractEventBusTest extends TestCase
     {
         $bus = $this->getBus();
         $c   = 0;
-        $bus->addListener(DummyStoppableEvent::class, function (DummyStoppableEvent $event) use (&$c) {
+        $bus->addListener(FixtureStoppableEvent::class, function (FixtureStoppableEvent $event) use (&$c) {
             $event->stopPropagation();
             $c++;
         });
-        $bus->addListener(DummyStoppableEvent::class, function (DummyStoppableEvent $event) {
+        $bus->addListener(FixtureStoppableEvent::class, function (FixtureStoppableEvent $event) {
             $this->fail("The event was not stopped!");
         });
-        $e = $bus->dispatch(new DummyStoppableEvent());
+        $e = $bus->dispatch(new FixtureStoppableEvent());
         self::assertTrue($e->isPropagationStopped());
         self::assertEquals(1, $c);
+    }
+
+    public function testOneTimeEvents()
+    {
+        $bus = $this->getBus();
+        $a   = 0;
+        $b   = 0;
+        $c   = 0;
+        $d   = 0;
+        $bus->addListener(FixtureEventA::class, function () use (&$d) {
+            $d++;
+        });
+        $bus->addListener(FixtureEventA::class, function () use (&$a) {
+            $a++;
+        }, ['once']);
+        $bus->addListener(FixtureEventB::class, function () use (&$b) {
+            $b++;
+        }, ['once']);
+        $bus->addListener(FixtureEventC::class, function ($e) use (&$c) {
+            static::assertInstanceOf(FixtureEventC::class, $e);
+            $c++;
+        }, ['once']);
+        for ($i = 0; $i < 10; $i++) {
+            $bus->dispatch(new FixtureEventA());
+            $bus->dispatch(new FixtureEventB());
+            $bus->dispatch(new FixtureEventC());
+        }
+
+        static::assertEquals(1, $a);
+        static::assertEquals(1, $b);
+        static::assertEquals(1, $c);
+        static::assertEquals(20, $d); // 10 times for FixtureEventA and 10 more for FixtureEventC through inheritance
     }
 
     protected function getBus(bool $withContainer = false): EventBusInterface

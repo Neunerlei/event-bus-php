@@ -92,6 +92,13 @@ class EventListenerListItem
     public $listener;
 
     /**
+     * If this is set to true the item should be only triggered once
+     *
+     * @var bool
+     */
+    public $once = false;
+
+    /**
      * EventListenerListItem constructor.
      *
      * @param   string    $eventClassName  The name of the event class to bind this listener to
@@ -120,6 +127,10 @@ class EventListenerListItem
             $this->id = $options['id'];
         } else {
             $this->id = md5($eventClassName . '-' . static::$counter);
+        }
+
+        if (isset($options['once']) && $options['once'] === true || in_array('once', $options, true)) {
+            $this->once = true;
         }
 
         static::$counter++;
