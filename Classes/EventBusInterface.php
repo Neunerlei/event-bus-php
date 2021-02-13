@@ -50,9 +50,8 @@ interface EventBusInterface extends EventDispatcherInterface
      *                                      listener.
      *                                      - after: string Can be used to define the id of another listener that this
      *                                      listener should be added after. This overrides PRIORITY. The new listener
-     *                                      is
-     *                                      only guaranteed to come after the specified existing listener. No guarantee
-     *                                      is made regarding when it comes relative to any other listener.
+     *                                      is only guaranteed to come after the specified existing listener. No
+     *                                      guarantee is made regarding when it comes relative to any other listener.
      *
      * @return $this
      * @throws MissingAdapterException

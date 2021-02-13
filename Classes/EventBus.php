@@ -92,6 +92,8 @@ class EventBus implements EventDispatcherInterface, ListenerProviderInterface, E
                 array $options
             ) {
                 // Create a pseudo item to translate the options
+                // @todo this should be done in the addListener method and then
+                // passed through to the adapter in the next major release
                 $item = new EventListenerListItem('', [$this, '__construct'], $options);
                 if ($item->pivotId === null) {
                     return $provider->addListener($listener, $item->priority, $item->id, $event);
@@ -118,7 +120,8 @@ class EventBus implements EventDispatcherInterface, ListenerProviderInterface, E
         } else {
             // Validate event
             if (! is_string($events)) {
-                throw new InvalidArgumentException('The given event, or list of events is invalid! Only strings or arrays of strings are allowed!');
+                throw new InvalidArgumentException(
+                    'The given event, or list of events is invalid! Only strings or arrays of strings are allowed!');
             }
 
             // Check if we use the built-in provider, or an external provider that requires an adapter
@@ -140,7 +143,8 @@ class EventBus implements EventDispatcherInterface, ListenerProviderInterface, E
                     }
 
                     if (empty($this->suggestedAdapter)) {
-                        throw new MissingAdapterException('Could not resolve a listener provider adapter class!');
+                        throw new MissingAdapterException(
+                            'Could not resolve a listener provider adapter class!');
                     }
                 }
 
@@ -177,17 +181,19 @@ class EventBus implements EventDispatcherInterface, ListenerProviderInterface, E
     {
         // Check if the class implements the required interface
         if (! in_array(LazyEventSubscriberInterface::class, class_implements($subscriberClass), true)) {
-            throw new InvalidSubscriberException('The given lazy subscriber: ' . $subscriberClass .
-                                                 ' does not implement the required interface: '
-                                                 . LazyEventSubscriberInterface::class);
+            throw new InvalidSubscriberException(
+                'The given lazy subscriber: ' . $subscriberClass .
+                ' does not implement the required interface: '
+                . LazyEventSubscriberInterface::class);
         }
 
         // Prepare the factory
         if (empty($factory)) {
             // Check if we have a container
             if (empty($this->container)) {
-                throw new MissingContainerException('Could not add a lazy subscriber, because there is neither a ' .
-                                                    "factory, nor a container to instantiate the class: \"$subscriberClass\"!");
+                throw new MissingContainerException(
+                    'Could not add a lazy subscriber, because there is neither a ' .
+                    "factory, nor a container to instantiate the class: \"$subscriberClass\"!");
             }
 
             $factory = function () use ($subscriberClass) {
