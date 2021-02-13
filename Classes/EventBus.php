@@ -23,7 +23,6 @@ namespace Neunerlei\EventBus;
 
 use Closure;
 use Crell\Tukio\OrderedProviderInterface;
-use InvalidArgumentException;
 use Neunerlei\ContainerAutoWiringDeclaration\SingletonInterface;
 use Neunerlei\EventBus\Dispatcher\EventBusDispatcher;
 use Neunerlei\EventBus\Dispatcher\EventBusListenerProvider;
@@ -38,6 +37,7 @@ use Psr\Container\ContainerInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\EventDispatcher\ListenerProviderInterface;
 use ReflectionFunction;
+use TypeError;
 
 class EventBus implements EventDispatcherInterface, ListenerProviderInterface, EventBusInterface, SingletonInterface
 {
@@ -149,7 +149,7 @@ class EventBus implements EventDispatcherInterface, ListenerProviderInterface, E
         } else {
             // Validate event
             if (! is_string($events)) {
-                throw new InvalidArgumentException(
+                throw new TypeError(
                     'The given event, or list of events is invalid! Only strings or arrays of strings are allowed!');
             }
 
