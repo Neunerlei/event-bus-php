@@ -76,7 +76,7 @@ class EventBus implements EventDispatcherInterface, ListenerProviderInterface, E
     /**
      * EventBus constructor.
      *
-     * @param   \Psr\Container\ContainerInterface  $container
+     * @param   \Psr\Container\ContainerInterface|null  $container
      */
     public function __construct(?ContainerInterface $container = null)
     {
@@ -92,14 +92,16 @@ class EventBus implements EventDispatcherInterface, ListenerProviderInterface, E
                 array $options
             ) {
                 // Create a pseudo item to translate the options
-                $item = new EventListenerListItem("", [$this, "__construct"], $options);
-                if (is_null($item->pivotId)) {
+                $item = new EventListenerListItem('', [$this, '__construct'], $options);
+                if ($item->pivotId === null) {
                     return $provider->addListener($listener, $item->priority, $item->id, $event);
-                } elseif ($item->beforePivot) {
-                    return $provider->addListenerBefore($item->pivotId, $listener, $item->id, $event);
-                } else {
-                    return $provider->addListenerAfter($item->pivotId, $listener, $item->id, $event);
                 }
+
+                if ($item->beforePivot) {
+                    return $provider->addListenerBefore($item->pivotId, $listener, $item->id, $event);
+                }
+
+                return $provider->addListenerAfter($item->pivotId, $listener, $item->id, $event);
             },
         ];
     }
@@ -116,37 +118,40 @@ class EventBus implements EventDispatcherInterface, ListenerProviderInterface, E
         } else {
             // Validate event
             if (! is_string($events)) {
-                throw new InvalidArgumentException("The given event, or list of events is invalid! Only strings or arrays of strings are allowed!");
+                throw new InvalidArgumentException('The given event, or list of events is invalid! Only strings or arrays of strings are allowed!');
             }
 
             // Check if we use the built-in provider, or an external provider that requires an adapter
             $provider = $this->getConcreteListenerProvider();
-            if (! $provider instanceof EventBusListenerProvider) {
+            if ($provider instanceof EventBusListenerProvider) {
+                // Use the built-in provider
+                $id = $provider->addListener($events, $listener, $options);
+            } else {
                 // Find the correct adapter, if we use an external package
                 $adapter = null;
                 if (! is_string($this->suggestedAdapter) || ! $provider instanceof $this->suggestedAdapter) {
                     $this->suggestedAdapter = null;
+
                     foreach ($this->providerAdapters as $class => $_adapter) {
-                        if (! $provider instanceof $class) {
-                            continue;
+                        if ($provider instanceof $class) {
+                            $this->suggestedAdapter = $class;
+                            break;
                         }
-                        $this->suggestedAdapter = $class;
-                        break;
                     }
+
                     if (empty($this->suggestedAdapter)) {
-                        throw new MissingAdapterException("Could not resolve a listener provider adapter class!");
+                        throw new MissingAdapterException('Could not resolve a listener provider adapter class!');
                     }
                 }
+
                 $adapter = $this->providerAdapters[$this->suggestedAdapter];
-                $id      = call_user_func($adapter, $provider, $events, $listener, $options);
-            } else {
-                // Use the built-in provider
-                $id = $provider->addListener($events, $listener, $options);
+                $id      = $adapter($provider, $events, $listener, $options);
+
             }
 
             // Call the real handler implementation
-            if (empty($options["id"])) {
-                $options["id"] = $id;
+            if (empty($options['id'])) {
+                $options['id'] = $id;
             }
         }
 
@@ -171,9 +176,9 @@ class EventBus implements EventDispatcherInterface, ListenerProviderInterface, E
     public function addLazySubscriber(string $subscriberClass, ?callable $factory = null): EventBusInterface
     {
         // Check if the class implements the required interface
-        if (! in_array(LazyEventSubscriberInterface::class, class_implements($subscriberClass))) {
-            throw new InvalidSubscriberException("The given lazy subscriber: " . $subscriberClass .
-                                                 " does not implement the required interface: "
+        if (! in_array(LazyEventSubscriberInterface::class, class_implements($subscriberClass), true)) {
+            throw new InvalidSubscriberException('The given lazy subscriber: ' . $subscriberClass .
+                                                 ' does not implement the required interface: '
                                                  . LazyEventSubscriberInterface::class);
         }
 
@@ -181,7 +186,7 @@ class EventBus implements EventDispatcherInterface, ListenerProviderInterface, E
         if (empty($factory)) {
             // Check if we have a container
             if (empty($this->container)) {
-                throw new MissingContainerException("Could not add a lazy subscriber, because there is neither a " .
+                throw new MissingContainerException('Could not add a lazy subscriber, because there is neither a ' .
                                                     "factory, nor a container to instantiate the class: \"$subscriberClass\"!");
             }
 
@@ -191,12 +196,11 @@ class EventBus implements EventDispatcherInterface, ListenerProviderInterface, E
         }
 
         // Create the subscription
-        call_user_func([$subscriberClass, "subscribeToEvents"], new LazyEventSubscription($this, $factory));
+        call_user_func([$subscriberClass, 'subscribeToEvents'], new LazyEventSubscription($this, $factory));
 
         // Done
         return $this;
     }
-
 
     /**
      * @inheritDoc

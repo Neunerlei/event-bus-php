@@ -110,9 +110,12 @@ class EventListenerList implements IteratorAggregate
         } else {
             return;
         }
-        unset($this->items[$item->priority][$item->id]);
-        unset($this->itemsById[$item->id]);
-        unset($this->itemsToSort[$item->id]);
+
+        unset(
+            $this->items[$item->priority][$item->id],
+            $this->itemsById[$item->id],
+            $this->itemsToSort[$item->id]
+        );
     }
 
     /**
@@ -141,10 +144,11 @@ class EventListenerList implements IteratorAggregate
         // Sort all items that don't have a pivot id
         $itemsWithPivotId = [];
         foreach ($this->itemsToSort as $item) {
-            if (! is_null($item->pivotId)) {
+            if ($item->pivotId !== null) {
                 $itemsWithPivotId[$item->id] = $item;
                 continue;
             }
+
             $this->items[$item->priority][$item->id] = $item;
         }
 
@@ -155,24 +159,28 @@ class EventListenerList implements IteratorAggregate
         while (! empty($itemsWithPivotId) && $c < $limit) {
             $c++;
             $itemsWithPivotIdFiltered = [];
+
             foreach ($itemsWithPivotId as $item) {
                 // Check if it is easy -> Element is NOT in the new element list
-                if (! isset($itemsWithPivotId[$item->pivotId])) {
+                if (isset($itemsWithPivotId[$item->pivotId])) {
+                    // Keep the item for the next loop
+                    $itemsWithPivotIdFiltered[$item->id] = $item;
+                } else {
                     // Set the item directly
                     $pivotItem                               = $this->itemsById[$item->pivotId];
                     $item->priority                          = $pivotItem->priority;
                     $item->priority                          += $item->beforePivot ? 1 : -1;
                     $this->items[$item->priority][$item->id] = $item;
-                } // Keep the item for the next loop
-                else {
-                    $itemsWithPivotIdFiltered[$item->id] = $item;
                 }
             }
+
             $itemsWithPivotId = $itemsWithPivotIdFiltered;
         }
+
         if (! empty($itemsWithPivotId)) {
-            throw new CircularPivotIdException("You have an issue with your event's pivot id's! The pivot id's that failed are: " .
-                                               implode(", ", array_keys($itemsWithPivotId)));
+            throw new CircularPivotIdException(
+                'You have an issue with your event\'s pivot id\'s! The pivot id\'s that failed are: '
+                . implode(', ', array_keys($itemsWithPivotId)));
         }
 
         // Order the list by their keys
@@ -180,6 +188,6 @@ class EventListenerList implements IteratorAggregate
 
         // Done
         $this->itemsToSort = [];
-        $this->isDirty     = FALSE;
+        $this->isDirty     = false;
     }
 }

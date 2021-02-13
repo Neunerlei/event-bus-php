@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /*
  * Copyright 2021 Martin Neundorfer (Neunerlei)
  *
@@ -56,7 +57,7 @@ class EventBusDispatcher implements EventDispatcherInterface
 
         // Call all listeners
         foreach ($this->listenerProvider->getListenersForEvent($event) as $listener) {
-            call_user_func($listener, $event);
+            $listener($event);
             if ($event instanceof StoppableEventInterface && $event->isPropagationStopped()) {
                 return $event;
             }

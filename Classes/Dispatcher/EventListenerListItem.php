@@ -104,18 +104,24 @@ class EventListenerListItem
     {
         $this->eventClassName = $eventClassName;
         $this->listener       = $listener;
-        if (isset($options["priority"]) && is_numeric($options["priority"])) {
-            $this->priority = $options["priority"];
+
+        if (isset($options['priority']) && is_numeric($options['priority'])) {
+            $this->priority = $options['priority'];
         }
-        if (isset($options["before"]) && is_string($options["before"])) {
-            $this->pivotId     = $options["before"];
+
+        if (isset($options['before']) && is_string($options['before'])) {
+            $this->pivotId     = $options['before'];
             $this->beforePivot = true;
-        } elseif (isset($options["after"]) && is_string($options["after"])) {
-            $this->pivotId = $options["after"];
+        } elseif (isset($options['after']) && is_string($options['after'])) {
+            $this->pivotId = $options['after'];
         }
-        if (isset($options["id"]) && is_string($options["id"]))
-            $this->id = (string)$options["id"];
-        else $this->id = md5($eventClassName . "-" . static::$counter);
+
+        if (isset($options['id']) && is_string($options['id'])) {
+            $this->id = $options['id'];
+        } else {
+            $this->id = md5($eventClassName . '-' . static::$counter);
+        }
+
         static::$counter++;
     }
 }

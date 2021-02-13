@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /*
  * Copyright 2021 Martin Neundorfer (Neunerlei)
  *
@@ -36,7 +37,10 @@ class EventSubscription implements EventSubscriptionInterface
     protected $subscriber;
 
     /**
-     * @inheritDoc
+     * EventSubscription constructor.
+     *
+     * @param   \Neunerlei\EventBus\EventBusInterface  $bus
+     * @param                                          $subscriber
      */
     public function __construct(EventBusInterface $bus, $subscriber)
     {
