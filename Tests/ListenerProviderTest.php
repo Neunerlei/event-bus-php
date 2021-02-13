@@ -276,6 +276,12 @@ class ListenerProviderTest extends TestCase
             "before" => "1",
             "id"     => "2",
         ]);
+
+        foreach ($provider->getListenersForEvent(new FixtureEventA()) as $listener) {
+            // We do this, so we iterate the subscriber list -> which forces the provider to execute the sort method,
+            // that in return will throw the exception we expect.
+            static::fail('This should never happen');
+        }
     }
 
     public function testBindingRemoval()
