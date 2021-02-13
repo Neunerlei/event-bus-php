@@ -403,7 +403,7 @@ class EventBus implements EventDispatcherInterface, ListenerProviderInterface, E
             return $itemClone;
         }
 
-        $this->lastListenerId = $this->providerOnceProxies[$proxyId]->id;
+        $this->lastListenerId = $proxyId;
 
         return null;
     }
