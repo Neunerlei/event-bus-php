@@ -81,6 +81,28 @@ $bus->addListener(FixtureEventA::class, function(FixtureEventA $e){
 $bus->dispatch(new FixtureEventA());
 ```
 
+## One time only events
+Since version 3.0.0 it is possible to register one time only listeners. Meaning the listener will automatically be removed
+from the list after it was executed once. This feature works with all used listener providers out of the box.
+
+```php
+<?php
+use Neunerlei\EventBus\EventBus;
+use Neunerlei\EventBus\Tests\Assets\FixtureEventA;
+
+$bus = new EventBus();
+
+$bus->addListener(FixtureEventA::class, static function(){
+    echo 'I\'m a special kind of noodle!';
+}, ['once']);
+
+$bus->dispatch(new FixtureEventA());
+$bus->dispatch(new FixtureEventA());
+
+// The string will only show up once
+```
+
+
 ## Using event subscribers
 The concept of event subscribers is a concept that was (correct me if I'm wrong) mostly pushed by [Symfony](https://symfony.com/doc/current/event_dispatcher.html#creating-an-event-subscriber). It provides you with a unified solution for having multiple listeners in a single service.
 
