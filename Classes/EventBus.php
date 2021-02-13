@@ -87,7 +87,7 @@ class EventBus implements EventDispatcherInterface, ListenerProviderInterface, E
     /**
      * The unique id of the listener that was added last
      *
-     * @var string|integer
+     * @var string|int
      */
     protected $lastListenerId;
 

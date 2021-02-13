@@ -21,7 +21,9 @@ declare(strict_types=1);
 namespace Neunerlei\EventBus;
 
 
-class EventBusException extends \Exception
+use Exception;
+
+class EventBusException extends Exception
 {
 
 }
