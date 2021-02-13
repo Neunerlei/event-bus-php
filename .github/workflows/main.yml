@@ -1,6 +1,7 @@
 name: Create new Release
 
 on:
+    pull_request:
     push:
         branches:
             - master
@@ -53,6 +54,7 @@ jobs:
                     file: ./Tests/Coverage.xml
 
     release:
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         runs-on: ubuntu-latest
         needs: test
         steps:
